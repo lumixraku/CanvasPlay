@@ -172,20 +172,12 @@
         var z = M.z - center.z;
 
 
-        // 这是原来的写法
+        // 这是原来的写法  (原先codepen 这个例子 z 表示纵轴  和常识不符)
         // 以下是根据先 绕 X 轴旋转, 再绕 Z 轴旋转得到 (右手坐标系)
         // M.x = ct * x - st * cp * y + st * sp * z + center.x;
         // M.y = st * x + ct * cp * y - ct * sp * z + center.y;
         // M.z = sp * y + cp * z + center.z;
 
-        // 绕 z 轴旋转
-        // M.x = ct * x - st *  y;
-        // M.y = st * x + ct *  y;
-        // M.z = z + center.z;
-
-        // 绕 y 轴旋转
-        // M.x = ct * x - st * z;
-        // M.z = st * x + ct * z;
 
         // 现在改好了  ct st 控制在 y 轴上的旋转  cp  sp 控制在 x 轴上的旋转
         // 下面是 先绕 x 轴旋转  后绕 Y 轴旋转得到的结果
