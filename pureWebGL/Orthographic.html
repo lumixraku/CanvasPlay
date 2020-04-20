@@ -188,9 +188,10 @@
         // M.z = st * x + ct * z;
 
         // 现在改好了  ct st 控制在 y 轴上的旋转  cp  sp 控制在 x 轴上的旋转
-        M.x = ct * x - st * cp * z + st * sp * y + center.x;
-        M.y = sp * z + cp * y + center.z;
-        M.z = st * x + ct * cp * z - ct * sp * y + center.z;
+        // 下面是 先绕 x 轴旋转  后绕 Y 轴旋转得到的结果
+        M.x = ct * x + st * sp * y + st * cp * z + center.x;
+        M.y = cp * y - sp * z + center.y;
+        M.z = -st * x + ct * sp * y + ct * cp * z + center.z;
       }
 
       // Initialize the movement
