@@ -28,6 +28,11 @@
   https://juejin.im/entry/5aac7d90518825556918c0b7
   <script>
 
+    // 使用的坐标系是 右手坐标系
+    // 且屏幕右侧是 x 轴正方向
+    // 人眼看屏幕时候  人眼所在是 z 轴正方向  屏幕背后是 z 轴负方向
+
+
     var Vertex = function (x, y, z) {
       this.x = parseFloat(x);
       this.y = parseFloat(y);
@@ -44,33 +49,62 @@
       var d = side / 2;
 
       this.vertices = [
+
+        // 0 近面
         new Vertex(center.x - d, center.y - d, center.z + d),
+
+        // 1
         new Vertex(center.x - d, center.y - d, center.z - d),
+
+        // 2
         new Vertex(center.x + d, center.y - d, center.z - d),
+
+        // 3 近面
         new Vertex(center.x + d, center.y - d, center.z + d),
+
+        // 4 近面
         new Vertex(center.x + d, center.y + d, center.z + d),
+
+        // 5
         new Vertex(center.x + d, center.y + d, center.z - d),
+
+        // 6
         new Vertex(center.x - d, center.y + d, center.z - d),
+
+        // 7 近面
         new Vertex(center.x - d, center.y + d, center.z + d)
       ];
 
       // Generate the faces
       this.faces = [
+        // 底面
         [this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[3]],
+
+        // 右边侧面
         [this.vertices[3], this.vertices[2], this.vertices[5], this.vertices[4]],
+
+        // 顶面
         [this.vertices[4], this.vertices[5], this.vertices[6], this.vertices[7]],
+
+        // 左边侧面
         [this.vertices[7], this.vertices[6], this.vertices[1], this.vertices[0]],
+
+        // 远面(背面)
+        [this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]],
+
+        // 近面(正面)
         [this.vertices[7], this.vertices[0], this.vertices[3], this.vertices[4]],
-        [this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]]
       ];
     };
 
     function project(M) {
       // Distance between the camera and the plane
       var d = 600;
-      var r = d / (d + M.y);
+      var r = d / (d - M.z); // scale  // 右手坐标系, 近面的 z 值更大 所以用减去
+      console.log("M.z", M.z)
+      // r = 1 / r
 
-      return new Vertex2D(r * M.x, r * M.z);
+      return new Vertex2D(r * M.x, r * M.y);
     }
 
     function render(objects, ctx, dx, dy) {
@@ -84,6 +118,15 @@
           // Current face
           var face = objects[i].faces[j];
 
+
+
+          if (j == 5) {
+            ctx.strokeStyle = 'rgb(0, 0, 0)';
+            ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
+          } else {
+            ctx.strokeStyle = 'rgb(0, 0, 0)';
+            ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
+          }
           // Draw the first vertex
           var P = project(face[0]);
           ctx.beginPath();
@@ -117,7 +160,7 @@
       ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
 
       // Create the cube
-      var cube_center = new Vertex(0, 11 * dy / 10, 0);
+      var cube_center = new Vertex(0, 0, 0);
       var cube = new Cube(cube_center, dy);
       var objects = [cube];
 
@@ -135,6 +178,8 @@
 
       // Rotate a vertice
       function rotate(M, center, theta, phi) {
+        phi = -phi
+        theta = - theta
         // Rotation matrix coefficients
         var ct = Math.cos(theta);
         var st = Math.sin(theta);
@@ -146,9 +191,16 @@
         var y = M.y - center.y;
         var z = M.z - center.z;
 
-        M.x = ct * x - st * cp * y + st * sp * z + center.x;
-        M.y = st * x + ct * cp * y - ct * sp * z + center.y;
-        M.z = sp * y + cp * z + center.z;
+        // 以下是根据先 绕 X 轴旋转, 再绕 Z 轴旋转得到 (右手坐标系)
+        // M.x = ct * x - st * cp * y + st * sp * z + center.x;
+        // M.y = st * x + ct * cp * y - ct * sp * z + center.y;
+        // M.z = sp * y + cp * z + center.z;
+
+
+        // 下面是根据先 绕 X 轴, 再绕 Y 轴旋转得到.
+        M.x = ct * x - st * cp * z + st * sp * y + center.x;
+        M.y = sp * z + cp * y + center.z;
+        M.z = st * x + ct * cp * z - ct * sp * y + center.z;
       }
 
       // Initialize the movement
@@ -180,12 +232,12 @@
       }
 
       function autorotate() {
-        for (var i = 0; i < 8; ++i)
-          rotate(cube.vertices[i], cube_center, -Math.PI / 720, Math.PI / 720);
+        // for (var i = 0; i < 8; ++i)
+        //   rotate(cube.vertices[i], cube_center, -Math.PI / 720, Math.PI / 720);
 
-        render(objects, ctx, dx, dy);
+        // render(objects, ctx, dx, dy);
 
-        autorotate_timeout = setTimeout(autorotate, 30);
+        // autorotate_timeout = setTimeout(autorotate, 30);
       }
       autorotate_timeout = setTimeout(autorotate, 2000);
     })();

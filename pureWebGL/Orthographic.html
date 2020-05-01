@@ -50,27 +50,56 @@
       // 默认看起来这里的 z 表示的是纵向  why!!!
       // 后来我调整为了右手坐标系
       this.vertices = [
-        //近面左下
+        //0近面左下顶点
         new Vertex(center.x - d, center.y - d, center.z + d),
 
+        //1远面(背面)左下顶点
         new Vertex(center.x - d, center.y - d, center.z - d),
+
+        //2远面(背面)右下顶点
         new Vertex(center.x + d, center.y - d, center.z - d),
+
+        //3近面右下顶点
         new Vertex(center.x + d, center.y - d, center.z + d),
+
+        //4近面右上顶点
         new Vertex(center.x + d, center.y + d, center.z + d),
+
+        //5远面(背面)右上顶点
         new Vertex(center.x + d, center.y + d, center.z - d),
+
+        //6远面左上顶点
         new Vertex(center.x - d, center.y + d, center.z - d),
+
+        //7近面左上顶点
         new Vertex(center.x - d, center.y + d, center.z + d)
       ];
       console.log("vectices", this.vertices)
 
       // Generate the faces
+
+      // 之前的顺序是  底面  右边侧面  顶面  左边侧面  近面(正面)  远面(背面)
+      // 最后绘制的是远面(背面) 本例子中没有遮挡剔除  所以实际绘制后默认看的是背面 不符合预期
+      // 现在改变一下顺序  每一轮绘制最后画的是近面
       this.faces = [
+        // 底面
         [this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[3]],
+
+        // 右边侧面
         [this.vertices[3], this.vertices[2], this.vertices[5], this.vertices[4]],
+
+        // 顶面
         [this.vertices[4], this.vertices[5], this.vertices[6], this.vertices[7]],
+
+        // 左边侧面
         [this.vertices[7], this.vertices[6], this.vertices[1], this.vertices[0]],
+
+        // 远面(背面)
+        [this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]],
+
+        // 近面(正面)
         [this.vertices[7], this.vertices[0], this.vertices[3], this.vertices[4]],
-        [this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]]
+
       ];
     };
 
@@ -91,6 +120,15 @@
           // Current face
           var face = objects[i].faces[j];
 
+
+          if ( j == 5) {
+            ctx.strokeStyle = "#FFFF00";
+            ctx.fillStyle = "#FFFF00";
+          }else{
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillStyle = 'rgb(0, 150, 255)';
+          }
+
           // Draw the first vertex
           var P = project(face[0]);
           // console.log(`x: ${face[0].x}, y: ${face[0].y},   z: ${face[0].z}`)
@@ -103,6 +141,8 @@
           console.log(P.x + dx, -P.y + dy)
           // Draw the other vertices
           for (var k = 1, n_vertices = face.length; k < n_vertices; ++k) {
+
+
             P = project(face[k]);
             ctx.lineTo(P.x + dx, -P.y + dy);
             console.log(P.x + dx, -P.y + dy)
@@ -156,7 +196,7 @@
         // theta = 0
         var ct = Math.cos(theta);
         var st = Math.sin(theta);
-        // theta 是控制在 z 轴上的旋转 (因为我强制phi = 0 后发现是这样的)
+        // 之前 theta 是控制在 z 轴上的旋转 (因为我强制phi = 0 后发现是这样的)
         // 和预期不符合 我希望theta 应该是控制 y 轴方向上的旋转  应该影响 z x
 
         // phi = 0
