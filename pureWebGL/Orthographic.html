@@ -47,7 +47,6 @@
       var d = side / 2;
 
 
-      // 默认看起来这里的 z 表示的是纵向  why!!!
       // 后来我调整为了右手坐标系
       this.vertices = [
         //0近面左下顶点
@@ -103,17 +102,47 @@
       ];
     };
 
-
-    function projectMatrix(M, dx, dy){
+    //
+    function projectMatrix(M, dx, dy) {
       // 在得到3D世界的坐标转为2D坐标的时候 需要注意3D世界坐标越往上, y 越大
       // 但是canvas 中, 2D的坐标原点在左上角 所以要写为 -M.y
       // P.x + dx, -P.y + d
-      let p = new Vertex2D(M.x, M.y);
-      p.x = p.x + dx
-      p.y = -p.y + dy  // 这里需要注意 canvas的 y 坐标是反过来的
+
+      // scale to [-1, 1] cuboid
+      // 先假设视体 frustum 是一个立方体, 且已经在(0,0,0)的位置  边长为2dx 也就是屏幕的宽度
+      // PS: 这个 0, 0 是指逻辑位置 物理上在屏幕上是屏幕的中心
+      var r = dx
+      var l = -dx
+      var b = dx
+      var t = -dx
+      var n = dx
+      var f = -dx  // 本例子使用右手坐标系 (摄像机面向 -Z 方向 越远 z 越小)
+
+
+      var offsetX = -(r + l) / 2
+      var offsetY = -(b + t) / 2
+      var offsetZ = -(n + f) / 2
+
+      let Mo = new Vertex(M.x, M.y, M.z)
+      Mo.x = 2 / (r - l) * M.x + offsetX
+      Mo.y = 2 / (b - t) * M.y + offsetY
+      Mo.z = 2 / (n - f) * M.z + offsetZ
+
+      // let p = new Vertex(Mo.x, Mo.y, Mo.z);
+      // p.x = dx * p.x + dx
+      // p.y = -dx * p.y + dy
+
+      return Mo
+    }
+
+    // Canonical Cube to Screen
+    function CanonicalCubeToScreen(Mo, dx, dy) {
+      let p = new Vertex(Mo.x, Mo.y, Mo.z);
+      p.x = dx * p.x + dx
+      p.y = -dx * p.y + dy  // 这里需要注意 canvas的 y 坐标是反过来的
+      // p.y = -dx * p.z + dy  // 这里需要注意 canvas的 y 坐标是反过来的
 
       return p
-
     }
 
 
@@ -131,17 +160,19 @@
           var face = objects[i].faces[j];
 
 
-          if ( j == 5) {
+          if (j == 5) {
             ctx.strokeStyle = "#FFFF00";
             ctx.fillStyle = "#FFFF00";
-          }else{
+          } else {
             ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillStyle = 'rgb(0, 150, 255)';
           }
 
           // Draw the first vertex
           // var P = project(face[0]);
-          var P = projectMatrix(face[0], dx, dy)
+          var coCube = projectMatrix(face[0], dx, dy)
+          var P = CanonicalCubeToScreen(coCube, dx, dy)
+          // var P = projectMatrix(face[0], dx, dy)
           // console.log(`x: ${face[0].x}, y: ${face[0].y},   z: ${face[0].z}`)
 
           ctx.beginPath();
@@ -152,9 +183,9 @@
           // Draw the other vertices
           for (var k = 1, n_vertices = face.length; k < n_vertices; ++k) {
 
-
-            P = projectMatrix(face[k], dx, dy);
-            ctx.lineTo(P.x, P.y );
+            coCube = projectMatrix(face[k], dx, dy)
+            P = CanonicalCubeToScreen(coCube, dx, dy)
+            ctx.lineTo(P.x, P.y);
             // ctx.lineTo(P.x + dx, -P.y + dy);
 
           }
@@ -249,14 +280,14 @@
       }
 
       function move(evt) {
-        let clientX = evt.clientX  || evt.touches[0].clientX;
+        let clientX = evt.clientX || evt.touches[0].clientX;
         let clientY = evt.clientY || evt.touches[0].clientY;
 
         if (mousedown) {
           var theta = (clientX - mx) * Math.PI / 360;
           var phi = (clientY - my) * Math.PI / 180;
 
-          for (var i = 0; i < 8; ++i){
+          for (var i = 0; i < 8; ++i) {
             rotate(cube.vertices[i], cube_center, theta, phi);
           }
 
