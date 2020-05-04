@@ -23,10 +23,10 @@
 <body>
   <canvas id="cnv" width="800" height="600"></canvas>
 
-  <p>Created by Jérémy Heleine for <a href="https://codepen.io/SitePoint/pen/obapXL">CodePen</a></p>
+  <!-- <p>Created by Jérémy Heleine for <a href="https://codepen.io/SitePoint/pen/obapXL">CodePen</a></p>
 
 
-  https://juejin.im/entry/5aac7d90518825556918c0b7
+  https://juejin.im/entry/5aac7d90518825556918c0b7 -->
   <script>
 
     var Vertex = function (x, y, z) {
@@ -103,9 +103,19 @@
       ];
     };
 
-    function project(M) {
-      return new Vertex2D(M.x, M.y);
+
+    function projectMatrix(M, dx, dy){
+      // 在得到3D世界的坐标转为2D坐标的时候 需要注意3D世界坐标越往上, y 越大
+      // 但是canvas 中, 2D的坐标原点在左上角 所以要写为 -M.y
+      // P.x + dx, -P.y + d
+      let p = new Vertex2D(M.x, M.y);
+      p.x = p.x + dx
+      p.y = -p.y + dy  // 这里需要注意 canvas的 y 坐标是反过来的
+
+      return p
+
     }
+
 
     function render(objects, ctx, dx, dy) {
       // Clear the previous frame
@@ -130,22 +140,22 @@
           }
 
           // Draw the first vertex
-          var P = project(face[0]);
+          // var P = project(face[0]);
+          var P = projectMatrix(face[0], dx, dy)
           // console.log(`x: ${face[0].x}, y: ${face[0].y},   z: ${face[0].z}`)
 
           ctx.beginPath();
 
-          // 在得到3D世界的坐标转为2D坐标的时候 需要注意3D世界坐标越往上, y 越大
-          // 但是canvas 中, 2D的坐标原点在左上角 所以要写为 -P.y
-          ctx.moveTo(P.x + dx, -P.y + dy);
-          console.log(P.x + dx, -P.y + dy)
+
+          // ctx.moveTo(P.x + dx, -P.y + dy);
+          ctx.moveTo(P.x, P.y);
           // Draw the other vertices
           for (var k = 1, n_vertices = face.length; k < n_vertices; ++k) {
 
 
-            P = project(face[k]);
-            ctx.lineTo(P.x + dx, -P.y + dy);
-            console.log(P.x + dx, -P.y + dy)
+            P = projectMatrix(face[k], dx, dy);
+            ctx.lineTo(P.x, P.y );
+            // ctx.lineTo(P.x + dx, -P.y + dy);
 
           }
 
@@ -163,7 +173,7 @@
       canvas.width = canvas.offsetWidth;
       canvas.height = canvas.offsetHeight;
       var dx = canvas.width / 2;
-      var dy = canvas.height / 2;
+      var dy = canvas.height / 4;
 
       // Objects style
       var ctx = canvas.getContext('2d');
@@ -171,7 +181,7 @@
       ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
 
       // Create the cube
-      var cube_center = new Vertex(0, 0, 0);
+      var cube_center = new Vertex(0, 0, -25);
       var cube = new Cube(cube_center, dy);
       var objects = [cube];
 
@@ -186,6 +196,10 @@
       canvas.addEventListener('mousedown', initMove);
       document.addEventListener('mousemove', move);
       document.addEventListener('mouseup', stopMove);
+
+      canvas.addEventListener('touchstart', initMove);
+      document.addEventListener('touchmove', move);
+      document.addEventListener('touchend', stopMove);
 
       // Rotate a vertice
       function rotate(M, center, theta, phi) {
@@ -230,27 +244,29 @@
       function initMove(evt) {
         clearTimeout(autorotate_timeout);
         mousedown = true;
-        mx = evt.clientX;
-        my = evt.clientY;
+        mx = evt.clientX || evt.touches[0].clientX;
+        my = evt.clientY || evt.touches[0].clientY;
       }
 
       function move(evt) {
-
+        let clientX = evt.clientX  || evt.touches[0].clientX;
+        let clientY = evt.clientY || evt.touches[0].clientY;
 
         if (mousedown) {
-          var theta = (evt.clientX - mx) * Math.PI / 360;
-          var phi = (evt.clientY - my) * Math.PI / 180;
+          var theta = (clientX - mx) * Math.PI / 360;
+          var phi = (clientY - my) * Math.PI / 180;
 
-          for (var i = 0; i < 8; ++i)
+          for (var i = 0; i < 8; ++i){
             rotate(cube.vertices[i], cube_center, theta, phi);
+          }
 
-          mx = evt.clientX;
-          my = evt.clientY;
+          mx = clientX;
+          my = clientY;
 
           render(objects, ctx, dx, dy);
         } else {
-          mx = evt.clientX;
-          my = evt.clientY;
+          mx = clientX;
+          my = clientY;
           ctx.clearRect(0, 0, 50, 20)
           ctx.fillText(`${mx}, ${my}`, 10, 10);
         }

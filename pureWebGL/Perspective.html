@@ -47,6 +47,7 @@
     var Cube = function (center, side) {
       // Generate the vertices
       var d = side / 2;
+      console.log("size", side)
 
       this.vertices = [
 
@@ -98,11 +99,17 @@
     };
 
     function project(M) {
-      // Distance between the camera and the plane
-      var d = 600;
+      var n = 400
+      var f = 800
+      var fh = 400
+      var nh = 50
+
+      // Distance between the camera and the near plane
+      var d = 600; // 视点到近平面的距离
+
+
       var r = d / (d - M.z); // scale  // 右手坐标系, 近面的 z 值更大 所以用减去
-      console.log("M.z", M.z)
-      // r = 1 / r
+      r = ( d- M.z ) / 800
 
       return new Vertex2D(r * M.x, r * M.y);
     }
@@ -160,7 +167,7 @@
       ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
 
       // Create the cube
-      var cube_center = new Vertex(0, 0, 0);
+      var cube_center = new Vertex(0, 0, -400);
       var cube = new Cube(cube_center, dy);
       var objects = [cube];
 
@@ -199,7 +206,7 @@
 
         // 下面是根据先 绕 X 轴, 再绕 Y 轴旋转得到.
         M.x = ct * x - st * cp * z + st * sp * y + center.x;
-        M.y = sp * z + cp * y + center.z;
+        M.y = sp * z + cp * y + center.y;
         M.z = st * x + ct * cp * z - ct * sp * y + center.z;
       }
 
