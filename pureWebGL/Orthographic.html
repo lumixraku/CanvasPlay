@@ -111,12 +111,9 @@
       // scale to [-1, 1] cuboid
       // 先假设视体 frustum 是一个立方体, 且已经在(0,0,0)的位置  边长为2dx 也就是屏幕的宽度
       // PS: 这个 0, 0 是指逻辑位置 物理上在屏幕上是屏幕的中心
-      var r = dx
-      var l = -dx
-      var b = dx
-      var t = -dx
-      var n = dx
-      var f = -dx  // 本例子使用右手坐标系 (摄像机面向 -Z 方向 越远 z 越小)
+      var r=dx, b=dx, n = dx
+      var l=-dx, t=-dx, f = -dx
+      // 本例子使用右手坐标系 (摄像机面向 -Z 方向 越远 z 越小)
 
 
       var offsetX = -(r + l) / 2
@@ -128,10 +125,6 @@
       Mo.y = 2 / (b - t) * M.y + offsetY
       Mo.z = 2 / (n - f) * M.z + offsetZ
 
-      // let p = new Vertex(Mo.x, Mo.y, Mo.z);
-      // p.x = dx * p.x + dx
-      // p.y = -dx * p.y + dy
-
       return Mo
     }
 
@@ -140,7 +133,6 @@
       let p = new Vertex(Mo.x, Mo.y, Mo.z);
       p.x = dx * p.x + dx
       p.y = -dx * p.y + dy  // 这里需要注意 canvas的 y 坐标是反过来的
-      // p.y = -dx * p.z + dy  // 这里需要注意 canvas的 y 坐标是反过来的
 
       return p
     }

@@ -98,18 +98,38 @@
       ];
     };
 
+    var n = 400
+    var f = 800
+    var no = ( 800 - 400) / 2 //近平面到原点的距离
+    function projectMatrix(M) {
+      let Mo = new Vertex(M.x, M.y, M.z)
+
+
+      var r = 0
+      var z = 0
+      z = n + no - M.z // 右手坐标系, 近面的 z 值更大 所以用减去
+
+
+
+      Mo.x = n / z * Mo.x
+      Mo.y = n / z * Mo.y
+      Mo.z = (n + f)  - n * f/ z
+      return Mo
+
+    }
+
     function project(M) {
-      var n = 400
-      var f = 800
+
       var fh = 400
       var nh = 50
 
       // Distance between the camera and the near plane
-      var d = 600; // 视点到近平面的距离
+      var n = 600; // 视点到近平面的距离
+
+      var r = n / (n - M.z); // scale  // 右手坐标系, 近面的 z 值更大 所以用减去
+      // r = (d - M.z) / 800
 
 
-      var r = d / (d - M.z); // scale  // 右手坐标系, 近面的 z 值更大 所以用减去
-      r = ( d- M.z ) / 800
 
       return new Vertex2D(r * M.x, r * M.y);
     }
@@ -135,13 +155,13 @@
             ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
           }
           // Draw the first vertex
-          var P = project(face[0]);
+          var P = projectMatrix(face[0]);
           ctx.beginPath();
           ctx.moveTo(P.x + dx, -P.y + dy);
 
           // Draw the other vertices
           for (var k = 1, n_vertices = face.length; k < n_vertices; ++k) {
-            P = project(face[k]);
+            P = projectMatrix(face[k]);
             ctx.lineTo(P.x + dx, -P.y + dy);
           }
 
