@@ -46,7 +46,7 @@
 
     var Cube = function (center, side) {
       // Generate the vertices
-      var d = side / 2;
+      var d = side / 2;   // side = half height
       console.log("size", side)
 
       this.vertices = [
@@ -99,8 +99,8 @@
     };
 
     var n = 400
-    var f = 800
-    var no = ( 800 - 400) / 2 //近平面到原点的距离
+    var f = 880
+    var no = ( f - n) / 2 //近平面到原点的距离
     function projectMatrix(M) {
       let Mo = new Vertex(M.x, M.y, M.z)
 
@@ -108,7 +108,7 @@
       var r = 0
       var z = 0
       z = n + no - M.z // 右手坐标系, 近面的 z 值更大 所以用减去
-
+      console.log("z",   M.z,   z,  n/z)
 
 
       Mo.x = n / z * Mo.x
@@ -187,7 +187,7 @@
       ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
 
       // Create the cube
-      var cube_center = new Vertex(0, 0, -400);
+      var cube_center = new Vertex(0, 0, 0);
       var cube = new Cube(cube_center, dy);
       var objects = [cube];
 
