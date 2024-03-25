@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Three.js GLSL Example</title>
+  <style>
+    body {
+      margin: 0;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <script type="x-shader/x-vertex" id="vertexShader">
+        uniform float time;
+        void main() {
+            vec3 pos = position;
+            // 简单的动画效果，使顶点在y轴上根据时间振动
+            pos.y += sin(pos.y + time) * 0.5;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        }
+    </script>
+
+  <script type="x-shader/x-fragment" id="fragmentShader">
+        void main() {
+            gl_FragColor = vec4(0.5, 0.8, 1.0, 1.0); // 设置一个颜色
+        }
+    </script>
+
+  <!-- 引入 Three.js 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+  <script src="app.js"></script> <!-- 这里是你的javascript代码 -->
+</body>
+
+</html>
