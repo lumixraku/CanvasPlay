@@ -13,10 +13,13 @@
 
     const canvas = document.getElementById('myCanvas');
     const context = canvas.getContext('2d');
-
     const tempCanvas = document.createElement('canvas');
     const tempContext = tempCanvas.getContext('2d');
-    tempContext.imageSmoothingEnabled = false;
+    // 关键! 否则会模糊  因为 drawImage 的 x y 可能是小数
+    // canvas 自带的抗锯齿可能使得图像边缘模糊
+    // 要么 drawImage 每次坐标都取整, 要么关掉抗锯齿
+    context.imageSmoothingEnabled = false;
+    tempContext.imageSmoothingEnabled = false; 
 
     // 设置临时 Canvas 的大小与原始 Canvas 相同
     tempCanvas.width = canvas.width;
@@ -60,7 +63,7 @@
           context.fillRect(x, y, blockSize, blockSize);
         }
       }
-      // context.globalCompositeOperation = 'copy';
+      context.globalCompositeOperation = 'copy';
 
 
     }
@@ -72,22 +75,22 @@
     function offset(offsetX, offsetY) {
       // context.save();
       // 贴上位移后的图像
-      // context.setTransform(1, 0, 0, 1, 0, 0);
-      // context.drawImage(canvas, offsetX, offsetY);
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.drawImage(canvas, offsetX, offsetY);
 
 
+      // 方法2
+      // tempContext.clearRect(0, 0, canvas.width, canvas.height);
+      // // 将原始 Canvas 的内容绘制到临时 Canvas 上
+      // tempContext.drawImage(canvas, 0, 0, canvas.width, canvas.height);
 
-      tempContext.clearRect(0, 0, canvas.width, canvas.height);
-      // 将原始 Canvas 的内容绘制到临时 Canvas 上
-      tempContext.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+      // // 清空原始 Canvas
+      // context.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 清空原始 Canvas
-      context.clearRect(0, 0, canvas.width, canvas.height);
+      // context.globalCompositeOperation = 'source-over';
 
-      context.globalCompositeOperation = 'source-over';
-
-      // 绘制临时 Canvas，并使用 offsetX 和 offsetY 进行偏移
-      context.drawImage(tempCanvas, offsetX, offsetY, canvas.width, canvas.height);
+      // // 绘制临时 Canvas，并使用 offsetX 和 offsetY 进行偏移
+      // context.drawImage(tempCanvas, Math.floor(offsetX), Math.floor(offsetY), canvas.width, canvas.height);
       // context.restore();
 
     }
@@ -155,25 +158,6 @@
       };
     }
 
-    let offsetX = 0;
-    let offsetY = 0;
-
-    function drawImageWithOffset() {
-      console.time('cost');
-
-      if (offsetX > 5) {
-        offsetX = -offsetX;
-      } else {
-        offsetX += 0.01;
-      }
-      offset(offsetX, offsetY);
-      // lastOffsetX = offsetX;
-      // lastOffsetY = offsetY;
-      console.timeEnd('cost');
-
-      requestAnimationFrame(drawImageWithOffset);
-    }
-    // drawImageWithOffset();
 
 
   </script>

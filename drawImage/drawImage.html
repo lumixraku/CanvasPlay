@@ -105,6 +105,8 @@
 
       function handleMouseUp() {
         moving = false;
+        previousX = 0;
+        previousY = 0;
       }
 
 
@@ -127,10 +129,10 @@
       // 通过 requestAnimationFrame 实现动画效果
       requestAnimationFrame(drawImageWithOffset);
     }
-    drawImageWithOffset();
+    // drawImageWithOffset();
 
     // 开始绘制动画
-    drawImageWithOffset();
+    // drawImageWithOffset();
   </script>
 </body>
 
