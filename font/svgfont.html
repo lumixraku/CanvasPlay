@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>使用 JSON 字体渲染文本</title>
+    <style>
+        canvas {
+            display: block;
+            margin: auto;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="text-canvas" width="400" height="200"></canvas>
+    <script>
+        const canvas = document.getElementById('text-canvas');
+        const ctx = canvas.getContext('2d');
+
+        fetch('/font/ZCOOL_QingKe_HuangYou_Regular.json')
+            .then(response => response.json())
+            .then(fontData => {
+                // 假设fontData是一个包含字体信息的对象
+                // 这里我们需要根据实际情况来解析fontData并使用它来绘制文本
+                // 由于这个过程取决于JSON的具体结构和您的应用程序需求，这里只提供一个概念性的示例
+
+                // 设置字体样式
+                ctx.font = '32px "ZCOOL QingKe HuangYou"';
+
+                // 绘制文本
+                ctx.fillText('示例文本', 10, 50);
+
+                // 如果您有JSON中的字形数据，您可以使用它来自定义文本的渲染方式
+                // 例如，您可以计算字形的路径并使用ctx.stroke或ctx.fill来绘制它们
+            });
+    </script>
+</body>
+</html>
