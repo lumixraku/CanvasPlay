@@ -77,38 +77,47 @@ window.addEventListener('resize', () => {
 //#region ennv
 const skyGeo = new THREE.SphereGeometry(1000, 60, 60);
 skyGeo.scale(1, 1, -1); // 进入球体内部反转
+const texture = new THREE.TextureLoader().load('./assets/sky.jpg')
+
 const skyMtl = new THREE.MeshBasicMaterial({
     color: 0xffffff,
-    map: new THREE.TextureLoader().load('./assets/sky.jpg')
+    map: texture
 });
 const sky = new THREE.Mesh(skyGeo, skyMtl);
 scene.add(sky);
+// 设置映射模式为球面映射
+texture.mapping = THREE.SphericalReflectionMapping;
+
+// 将纹理设置为场景的背景
+scene.background = texture;
+scene.environment = texture;
+
 // 视频纹理
 const video = document.createElement("video");
 video.src = "./assets/sky.mp4";
 video.loop = true;
 
-window.addEventListener("click", (e) => {
-    // 当鼠标移动的时候播放视频
-    //   判断视频是否处于播放状态
-    if (video.paused) {
-        video.play();
-        let texture = new THREE.VideoTexture(video);
-        skyMtl.map = texture;
-        skyMtl.map.needsUpdate = true;
-    }
-});
+// window.addEventListener("click", (e) => {
+//     // 当鼠标移动的时候播放视频
+//     //   判断视频是否处于播放状态
+//     if (video.paused) {
+//         video.play();
+//         let texture = new THREE.VideoTexture(video);
+//         skyMtl.map = texture;
+//         skyMtl.map.needsUpdate = true;
+//     }
+// });
 
 
 const light = new THREE.DirectionalLight(0xffffff, 1);
 light.position.set(-100, 100, 10);
 scene.add(light);
 const hdrLoader = new RGBELoader();
-// hdrLoader.loadAsync("./assets/050.hdr").then((texture) => {
-//     texture.mapping = THREE.EquirectangularReflectionMapping;
-//     scene.background = texture;
-//     scene.environment = texture;
-// });
+hdrLoader.loadAsync("./assets/050.hdr").then((texture) => {
+    texture.mapping = THREE.EquirectangularReflectionMapping;
+    scene.background = texture;
+    scene.environment = texture;
+});
 
 
 
