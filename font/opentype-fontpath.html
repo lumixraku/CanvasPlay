@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>使用 JSON 字体渲染文本</title>
+    <style>
+        canvas {
+            display: block;
+            margin: auto;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="importmap">
+    {
+        "imports": {
+            "opentype.js": "https://unpkg.com/opentype.js@latest/dist/opentype.module.js"
+        }
+    }
+    </script>
+    <canvas id="myCanvas" width="500" height="500" style="width: 500px; height:500px;"></canvas>
+    <script type="module">
+        import { Font, parse } from 'opentype.js';
+
+
+        // 加载字体文件，这里假设你有一个字体文件的URL
+        const buffer = fetch('/font/ZCOOLQingKeHuangYou-Regular.ttf').then(res => res.arrayBuffer());
+        const font = parse(await buffer);
+        const opentypePath = font.getPath('圣诞树🎄Tree', 0, 0, 72)
+        // 获取Canvas上下文
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const pathStr = opentypePath.toPathData();
+        ctx.beginPath();
+        ctx.translate(100, 100);
+        const path = new Path2D(pathStr);
+        ctx.fill(path);
+        ctx.closePath()
+    </script>
+</body>
+
+</html>
