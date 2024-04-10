@@ -17,28 +17,52 @@
     <script type="importmap">
     {
         "imports": {
-            "opentype.js": "https://unpkg.com/opentype.js@latest/dist/opentype.module.js"
+            "offcial/opentype.js": "https://unpkg.com/opentype.js@latest/dist/opentype.module.js",
+            "opentype.js": "https://unpkg.com/@konghayao/opentype.js@2024.3.19/dist/opentype.module.js"
         }
     }
     </script>
+    <!-- <script src="https://unpkg.com/opentype.js"></script> -->
     <canvas id="myCanvas" width="500" height="500" style="width: 500px; height:500px;"></canvas>
     <script type="module">
-        import { Font, parse } from 'opentype.js';
+        import * as opentype from 'offcial/opentype.js';
+        import { Path } from 'opentype.js';
+        // import * as opentype from 'opentype.js';
 
 
         // 加载字体文件，这里假设你有一个字体文件的URL
         const buffer = fetch('/font/ZCOOLQingKeHuangYou-Regular.ttf').then(res => res.arrayBuffer());
-        const font = parse(await buffer);
-        const opentypePath = font.getPath('圣诞树🎄Tree', 0, 0, 72)
+        const font = opentype.parse(await buffer);
+        const opentypePath = font.getPath('圣诞树Tree', 0, 0, 72)
         // 获取Canvas上下文
         const canvas = document.getElementById('myCanvas');
         const ctx = canvas.getContext('2d');
         const pathStr = opentypePath.toPathData();
+
+
+        const pathShadow = new Path2D(pathStr);
+        // const path = new Path2D(pathStr);
+        // const path = new Path2D(pathStr);
+        const path = new Path();
+        path.fromSVG(pathStr);
+        // const textBox = path.getBoundingBox();
+
+
+
         ctx.beginPath();
-        ctx.translate(100, 100);
-        const path = new Path2D(pathStr);
-        ctx.fill(path);
+        ctx.translate(150, 250);
+        ctx.filter = 'blur(4px)';
+        ctx.fill(pathShadow);
+        // pathShadow.draw(ctx);
+        ctx.filter = 'none';
         ctx.closePath()
+
+        ctx.beginPath();
+        // ctx.fill(path);
+        path.draw(ctx);
+        ctx.closePath()
+
+
     </script>
 </body>
 
