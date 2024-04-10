@@ -53,15 +53,17 @@
         ctx.translate(150, 250);
         ctx.filter = 'blur(4px)';
         ctx.fill(pathShadow);
-        // pathShadow.draw(ctx);
         ctx.filter = 'none';
         ctx.closePath()
 
+        ctx.save();
         ctx.beginPath();
-        // ctx.fill(path);
-        path.draw(ctx);
+        // 使用opentype.js来处理字体，发现路径绘制时上下颠倒了，这是因为字体的坐标系统与Canvas的坐标系统不一致。
+        // 在字体设计中，y坐标通常向上增长，而在Canvas API中，y坐标向下增长。
+        ctx.scale(1, -1); // 在y轴方向翻转画布
+        path.draw(ctx); 
         ctx.closePath()
-
+        ctx.restore();
 
     </script>
 </body>
