@@ -24,12 +24,20 @@
 
 <body>
   <div id="control"></div>
-  <script src="https://unpkg.com/three"></script>
-  <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.156.0/build/three.module.js",
+                "three/": "https://unpkg.com/three@0.156.0/"
+            }
+        }
+    </script>
 
 
-  <script>
 
+  <script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
     function init() {
       // 获取浏览器窗口的宽高，后续会用
       var width = window.innerWidth
@@ -72,7 +80,7 @@
       // 初始化摄像机插件（用于拖拽旋转摄像机，产生交互效果）
 
       var controlElem = document.querySelector("#control")
-      var orbitControls = new THREE.OrbitControls(camera, controlElem)
+      var orbitControls = new OrbitControls(camera, controlElem)
       orbitControls.autoRotate = true
 
       var planeGeometry = new THREE.PlaneGeometry(60, 60, 1, 1)

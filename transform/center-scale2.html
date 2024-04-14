@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <canvas id="myCanvas" width="400" height="400" style="border:1px solid #000000;"></canvas>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 矩形的左上角坐标和尺寸
+        const rectX = 50;
+        const rectY = 50;
+        const rectWidth = 100;
+        const rectHeight = 50;
+
+        // 缩放因子
+        const scale = 2;
+
+        // 计算缩放后的矩形尺寸
+        const newWidth = rectWidth * scale;
+        const newHeight = rectHeight * scale;
+
+        // 计算矩形中心点坐标
+        const centerX = rectX + rectWidth / 2; // 100
+        const centerY = rectY + rectHeight / 2; // 75
+
+
+        // ctx.transform(a, b, c, d, e, f) 方法应用的变换顺序如下：
+
+        // 缩放(a 和 d): 首先，水平方向上缩放 a 倍，垂直方向上缩放 d 倍。缩放是围绕画布的原点（0, 0）进行的。
+        // 旋转(b 和 c): 接着，画布会根据 b 和 c 参数进行旋转。旋转同样是围绕原点（0, 0）进行的。
+        // 平移(e 和 f): 最后，画布会根据 e 和 f 参数进行平移。这个平移是相对于缩放和旋转之后的新原点进行的。
+
+
+
+        // 应用变换
+        // ctx.transform(1, 0, 0, 1, centerX, centerY);
+        // ctx.transform(2, 0, 0, 2, 0, 0);      
+        // ctx.transform(1, 0, 0, 1, -centerX, -centerY);
+
+        // 将上面三个变换合成为一个
+        // 因此这个矩阵就是按照坐标中心点缩放的矩阵, 以后都可以这么用
+        ctx.transform(2, 0, 0, 2, -centerX, -centerY);
+
+        // 绘制放大后的矩形
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+
+        // 重置变换状态
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+    </script>
+
+    <script>
+    function multiplyTransforms(transforms) {
+        // 初始矩阵为单位矩阵
+        let a = 1;
+        let b = 0;
+        let c = 0;
+        let d = 1;
+        let e = 0;
+        let f = 0;
+
+        // 遍历每个变换并累乘
+        for (const [aTransform, bTransform, cTransform, dTransform, eTransform, fTransform] of transforms) {
+            // 计算新的缩放和倾斜因子
+            const newA = a * aTransform + b * cTransform;
+            const newB = a * bTransform + b * dTransform;
+            const newC = c * aTransform + d * cTransform;
+            const newD = c * bTransform + d * dTransform;
+
+            // 计算新的位移
+            const newE = a * eTransform + b * fTransform + e;
+            const newF = c * eTransform + d * fTransform + f;
+
+            // 更新矩阵的缩放、倾斜和位移参数
+            a = newA;
+            b = newB;
+            c = newC;
+            d = newD;
+            e = newE;
+            f = newF;
+        }
+
+        // 返回合并后的变换矩阵的参数
+        return [a, b, c, d, e, f];
+    }
+
+
+    const first = [1, 0, 0, 1, centerX, centerY]; // 平移至中心
+    const second = [2, 0, 0, 2, 0, 0]; // 缩放两倍
+    const third = [1, 0, 0, 1, -centerX, -centerY]; // 平移回原点
+    
+    const transforms = multiplyTransforms([first, second, third ]);    
+    console.log(transforms); // 结果是  [2, 0, 0, 2, -100, -75]
+    </script>
+</body>
+
+</html>
