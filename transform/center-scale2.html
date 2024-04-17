@@ -155,7 +155,7 @@
         })
 
         const zoomAndDraw = (zoom, x, y) => {
-            ctx.transform(zoom, 0, 0, zoom, -x * (zoom - 1), -y * (zoom - 1));
+            ctx.setTransform(zoom, 0, 0, zoom, -x * (zoom - 1), -y * (zoom - 1));
             draw();
         }
 
