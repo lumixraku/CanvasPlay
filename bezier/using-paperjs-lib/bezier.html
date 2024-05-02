@@ -43,11 +43,11 @@
                 dashArray: [4, 4]
             });
             // Create path for the bezier curve
-            // Point: Segment 的主要部分是一个点，表示曲线开始点 or 结束点。
+            // 初始化时, Segments [Point] 的主要部分是一个点，表示曲线开始点 or 结束点。
             // 每一个起点都有 handleIn  每一个结束点都有 handleOut 
 
             // HandleIn: 一个向量，是控制点和开始点构成的向量, controlPoint - startPoint 它定义了曲线接近控制点时的形状。
-            // HandleOut: 一个向量，是控制点和结束点构成的向量, controlPoint - endPoint 它定义了曲线远离控制点的形状。            
+            // HandleOut: 一个向量，是控制点和结束点构成的向量, controlPoint - endPoint 它定义了曲线远离控制点的形状。
             var bezierPath = new Path({
                 segments: [startPoint, endPoint],
                 // segments: [startPoint, controlPoint1, controlPoint2, endPoint],
@@ -55,6 +55,7 @@
             });
 
             // Set the control handles for the curve
+            // PS! bezierPath.segments[0] is a segment, not startPoint (个人觉得这个 Path 初始化的参数有点歧义)
             bezierPath.segments[0].handleOut = controlPoint1.subtract(startPoint);
             bezierPath.segments[1].handleIn = controlPoint2.subtract(endPoint);
 
