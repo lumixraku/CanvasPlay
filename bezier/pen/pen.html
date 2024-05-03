@@ -7,75 +7,229 @@
     <style>
         canvas {
             width: 100%;
-            height: 400px;
+            height: 900px;
             border: 1px solid #ccc;
         }
     </style>
     <title>Document</title>
+    <script src="/public/paper-full.js"></script>
 </head>
 
 <body>
     <canvas id="myCanvas"></canvas>
-    <script src="/public/paper-full.js"></script>
     </script>
     <script type="module">
+        import { existsSamePoint } from './util.mjs';
         paper.setup('myCanvas');
 
         const recKeyPoints = [];
         let startPoint = null; // 记录点击位置的起点
         let endPoint = null;
         let dashLine = null; // 虚线路径
+        dashLine = new paper.Path();
+        dashLine.strokeColor = 'black';
+        dashLine.dashArray = [5, 5]; // 设置虚线样式      
+        dashLine.add(new paper.Point(0, 0))
+        dashLine.add(new paper.Point(0, 0))
 
+
+        let cp1 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
+        cp1.fillColor = 'blue';
+
+        let cp2 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
+        cp2.fillColor = 'blue';
+
+
+        let fixedLines = [];
+        let currCertainLine = null;
+        let clickExist = false;
+        let drawing = false;
+        let isBezierMode = false;
+        let isDragging = false; // drag 松开时, cp 确定, 更新端点
         // click & drag 
         {
 
             // 监听鼠标点击事件
             function onMouseDown(event) {
+                drawing = true;
+
+                startNewLineIfNoStartPoint();
+
+
+
                 // 绘制一个点
-                var point = new paper.Point(event.point.x, event.point.y);
-                var circle = new paper.Path.Circle(point, 5);
-                circle.fillColor = 'black';
-                
-                dashLine = new paper.Path();
-                dashLine.strokeColor = 'black';
-                dashLine.dashArray = [5, 5]; // 设置虚线样式
-                
-                startPoint = point;    
-                endPoint = point;
-                dashLine.add(startPoint); // 起点                
-                dashLine.add(endPoint);         
-                recKeyPoints.push(point);
+                let rawPoint = new paper.Point(event.point.x, event.point.y);
+                let point = rawPoint;
+                let samePoint = existsSamePoint(recKeyPoints, point);
+
+                // end of curr line
+                let isSamePoint = false;
+                if (samePoint) {
+                    point = samePoint;
+                    isSamePoint = true;
+                }
+                 
+                putAPoint(point, isSamePoint);
+
+
+              
             }
+
+
+
+            function onMouseMove(event) {
+                if (!drawing) return;
+                // endPoint s= event.point; // 更新终点位置
+                if (isBezierMode) {
+                    updateCurve(event);
+                } else {
+                    updateCurrPoint(event);
+                }
+            }
+
 
             // 监听鼠标拖拽事件
             function onMouseDrag(event) {
-                endPoint = event.point; // 更新终点位置
-                // 更新点的位置
-                if (startPoint) {
-                    let lastOne = dashLine.segments.length -1;
-                    // if(dashLine._segments.length > 1){
-                    //     let lastOne = dashLine._segments.length;
-                    //     dashLine.removeSegment(lastOne); // 移除之前的终点
-                    // }
-                    // dashLine.add(event.point); // 更新终点
-                    dashLine.segments[lastOne].point = endPoint;
-                }
-                // dashLine.segments[1].point = endPoint; // 更新线段的终点
+                if (!drawing) return;
+                isBezierMode = true;
+                isDragging = true;
+                updateControlPoint(event);
             }
 
             // 监听鼠标Up事件
+            // 新一轮的开始
             function onMouseUp(event) {
-                // 更新点的位置
-                var point = new paper.Point(event.point.x, event.point.y);
-                var circle = new paper.Path.Circle(point, 5);
-                circle.fillColor = 'black';
-            }            
+                // 绘制一个点
+                let rawPoint = new paper.Point(event.point.x, event.point.y);
+                let point = rawPoint;
+                let samePoint = existsSamePoint(recKeyPoints, point);
+
+                // end of curr line
+                let isSamePoint = false;
+                if (samePoint) {
+                    point = samePoint;
+                    isSamePoint = true;
+                }
+
+                if(isBezierMode) {
+                    // putAPoint(point, isSamePoint);
+                    if(isDragging) {
+                        isDragging = false;   
+                        // putAPoint(point, isSamePoint);  
+                        // lastSeg.handleIn = cp1.position.subtract(lastSeg.point);
+                        let lastSeg = getLastSegmentOfCurrLine();
+                        lastSeg.handleOut = cp1.position.subtract(lastSeg.point);
+                        currCertainLine.add(point);
+                                                               
+                    }
+                    // updateCurve(event);
+                } else {
+                    putAPoint(point, isSamePoint);
+                }
+                
+            }
+
+            // 监听键盘按下事件
+            function onKeyDown(event) {
+                if (event.key === 'escape') {
+                    // 在按下ESC键时执行的操作
+                    console.log('ESC键按下了');
+                    drawing = false;
+                    endPoint = startPoint;
+                    // if (startPoint) {
+                    //     let lastOne = dashLine.segments.length - 1;
+                    //     dashLine.segments[lastOne].point = startPoint;
+                    // }
+                    endOfDraw();
+                }
+            }
+
+            function onMouseClick(event) {
+                // debugger
+                // isBezierMode = false;
+            }
+
+
+            function endOfDraw() {
+                fixedLines.push(currCertainLine)
+                drawing = false;
+                currCertainLine = null;
+            }
+
 
             // 绑定事件处理程序
             paper.view.onMouseDown = onMouseDown;
             paper.view.onMouseDrag = onMouseDrag;
+            paper.view.onMouseMove = onMouseMove;
             paper.view.onMouseUp = onMouseUp;
-            
+            paper.view.onClick = onMouseClick;
+            paper.view.onKeyDown = onKeyDown;
+
+            function startNewLineIfNoStartPoint() {
+                if (!currCertainLine) {
+                    currCertainLine = new paper.Path();                    
+                    currCertainLine.strokeColor = 'black';
+                    window.currCertainLine = currCertainLine;
+                }                
+            }
+
+            function updateControlPoint(event) {
+                const eventPoint = event.point;
+                cp1.position = eventPoint;
+                const lastSeg = getLastSegmentOfCurrLine();
+                const lastPoint = lastSeg.point;
+                const delta = eventPoint.subtract(lastPoint);                
+                cp2.position = lastPoint.subtract(delta);
+
+                if (currCertainLine) {
+                    let lastOne = currCertainLine.segments.length - 1;
+                    if (currCertainLine._segments.length > 1) {
+                        const lastPoint = currCertainLine.segments[lastOne].point;
+                        // 以事件的点, 中心对称点作为控制点
+                        currCertainLine.segments[lastOne].handleIn = cp2.position.subtract(lastPoint);
+                    }
+                }                
+            }
+
+            function putAPoint(point, isSamePoint){
+                startPoint = point;
+                endPoint = point;
+                
+                currCertainLine.add(point);
+                const pointIdx = Math.max(0, currCertainLine.segments.length - 1);
+                recKeyPoints.push(point);
+
+                let pointShape;
+                if (!isSamePoint) {
+                    pointShape = new paper.Path.Circle(point, 5);
+                    pointShape.fillColor = 'black';
+                }
+            }
+
+            function updateCurrPoint(event) {
+                // 更新点的位置
+                const lastIdx = currCertainLine.segments.length -1;
+                const lastPoint = currCertainLine.segments[lastIdx].point;
+                dashLine.segments[0].point = lastPoint;
+                dashLine.segments[1].point = event.point;
+            }
+
+
+            function getLastSegmentOfCurrLine() {
+                let lastOne = Math.max( 0, currCertainLine.segments.length - 1);
+                return currCertainLine.segments[lastOne];
+                
+            }
+
+            function updateCurve(event) {
+                const eventPoint = event.point;
+                const lastSeg = getLastSegmentOfCurrLine();
+                const lastPoint = lastSeg.point;
+                if (currCertainLine) {
+                    lastSeg.point = eventPoint;
+                }
+            }
+
         }
     </script>
 </body>
