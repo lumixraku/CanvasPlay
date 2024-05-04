@@ -22,17 +22,17 @@
         paper.setup('myCanvas');
 
         const recKeyPoints = [];
-        let startPoint = null; // 记录点击位置的起点
-        let endPoint = null;
+        globalThis.startPoint = null; // 记录点击位置的起点
+        globalThis.endPoint = null;
 
 
 
 
-        let drewLines = [];
-        let currCertainLine = null; //new paper.Path();;
-        let clickExist = false;
-        let drawing = false;
-        let isDragging = false; // drag 松开时, cp 确定, 更新端点
+        globalThis.drewLines = [];
+        globalThis.currLine = null; //new paper.Path();;
+        globalThis.clickExist = false;
+        globalThis.drawing = false;
+        globalThis.isDragging = false; // drag 松开时, cp 确定, 更新端点
 
         // 当前的 controlPoint
         let cp1, cp2, cp1HandleLine, cp2HandleLine;
@@ -41,34 +41,30 @@
 
             // 监听鼠标点击事件
             function onMouseDown(event) {
-                drawing = true;
-                let newStart = false;
-                if(!startPoint) {
-                    newStart = true;
-                    currCertainLine = startNewLine(event);
+                if(!globalThis.drawing) {
+                    globalThis.drawing = true;
+                    globalThis.currLine = startNewLine(event);
+                    drawASmallCircle(event.point);
                     putAPoint(event.point);
                 }
 
-                if (newStart) {
-                    drawASmallCircle(event.point);
-                }
             }
 
 
 
             function onMouseMove(event) {
-                if (!drawing) return;
+                if (!globalThis.drawing) return;
                 // endPoint s= event.point; // 更新终点位置
                 updateLastPoint(event);
             }
 
-
+            
             // 监听鼠标拖拽事件
             function onMouseDrag(event) {
-                if (!drawing) return;
+                if (!globalThis.drawing) return;
 
                 const lastSeg = getLastSegmentOfCurrLine();
-                if(!isDragging) {
+                if(!globalThis.isDragging) {
                     // 创建 controlPoint
                     let control = createControlPoint(lastSeg);
                     cp1 = control.cp1;
@@ -77,7 +73,7 @@
                     cp2HandleLine = control.cp2HandleLine;
                 }
                 updateControlPoint(event, lastSeg, {cp1, cp2, cp1HandleLine, cp2HandleLine});
-                isDragging = true;
+                globalThis.isDragging = true;
             }
 
             // 监听鼠标Up事件
@@ -86,32 +82,24 @@
                 // 绘制一个点
                 let rawPoint = new paper.Point(event.point.x, event.point.y);
                 let point = rawPoint;
-                let samePoint = existsSamePoint(recKeyPoints, point);
+
+                let filteredArray = recKeyPoints.slice(0, recKeyPoints.length - 1);
+                let { exists, neareastPoint } = existsSamePoint(filteredArray, point);
 
                 // end of curr line
-                let isSamePoint = false;
-                if (samePoint) {
-                    point = samePoint;
-                    isSamePoint = true;
+                if (exists) {
+                    point = neareastPoint;
+                    endOfDraw();
                 } else {
-                    putAPoint(point, isSamePoint);
+                    putAPoint(point);
                 }
-
-
-
-                // if (samePoint) {
-                //     endOfDraw();
-                // }
-
             }
 
             // 监听键盘按下事件
             function onKeyDown(event) {
                 if (event.key === 'escape') {
                     // 在按下ESC键时执行的操作
-                    console.log('ESC键按下了');
-                    drawing = false;
-                    endPoint = startPoint;
+                    console.log('结束编辑');
                     endOfDraw();
                 }
             }
@@ -123,9 +111,9 @@
 
 
             function endOfDraw() {
-                drawing = false;
-                startPoint = null;
-                drewLines.push(currCertainLine)
+                globalThis.drawing = false;
+                globalThis.startPoint = null;
+                globalThis.drewLines.push(currLine)
                 // currCertainLine = null;
             }
 
@@ -142,7 +130,7 @@
 
                 let currCertainLine = new paper.Path();
                 currCertainLine.strokeColor = 'black';
-
+                currCertainLine.add(event.point);
                 return currCertainLine;
             }
 
@@ -165,7 +153,7 @@
                 let cp2HandleLine = new paper.Path();
                 let cp2 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
                 let cp1 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
-                cp1.fillColor = 'blue';
+                cp1.fillColor = 'green';
                 cp2.fillColor = 'blue';
                 cp1HandleLine.strokeColor = 'grey';
                 cp1HandleLine.dashArray = [5, 5]; // 设置虚线样式    
@@ -179,11 +167,11 @@
                 });
                 cp1.on('mouseup', function (event) {
                     event.stopPropagation();
-                    isDragging = false;
+                    globalThis.isDragging = false;
                     let lastSeg = getLastSegmentOfCurrLine();
                     lastSeg.handleOut = cp1.position.subtract(lastSeg.point);
-                    if(drawing){
-                        currCertainLine.add(event.point);  // 作为当前曲线的末端点                    
+                    if(globalThis.drawing){
+                        currLine.add(event.point);  // 作为当前曲线的末端点                    
                     }
                     
                 });                
@@ -199,11 +187,11 @@
                 });
                 cp2.on('mouseup', function (event) {
                     event.stopPropagation();
-                    isDragging = false;
+                    globalThis.isDragging = false;
                     let lastSeg = getLastSegmentOfCurrLine();
                     lastSeg.handleOut = cp2.position.subtract(lastSeg.point);
-                    if (drawing) {
-                        currCertainLine.add(event.point);  // 作为当前曲线的末端点                    
+                    if (globalThis.drawing) {
+                        currLine.add(event.point);  // 作为当前曲线的末端点                    
                     }
                 });
                 cp2.on('mousedrag', function (event) {
@@ -224,19 +212,19 @@
                 return pointShape;
             }
 
-            function putAPoint(point, isSamePoint) {
+            function putAPoint(point) {
                 startPoint = point;
                 endPoint = point;
 
-                currCertainLine.add(point);
-                const pointIdx = Math.max(0, currCertainLine.segments.length - 1);
+                currLine.add(point);
+                const pointIdx = Math.max(0, currLine.segments.length - 1);
                 recKeyPoints.push(point);
 
                 let pointShape;
-                if (!isSamePoint) {
-                    pointShape = new paper.Path.Circle(point, 5);
-                    pointShape.fillColor = 'black';
-                }
+                // if (!isSamePoint) {
+                //     pointShape = new paper.Path.Circle(point, 5);
+                //     pointShape.fillColor = 'black';
+                // }
             }
 
             function updateLastPoint(event) {
@@ -246,19 +234,10 @@
             }
 
             function getLastSegmentOfCurrLine() {
-                let lastOne = Math.max(0, currCertainLine.segments.length - 1);
-                return currCertainLine.segments[lastOne];
+                let lastOne = Math.max(0, globalThis.currLine.segments.length - 1);
+                return globalThis.currLine.segments[lastOne];
 
             }
-
-            // function updateCurve(event) {
-            //     const eventPoint = event.point;
-            //     const lastSeg = getLastSegmentOfCurrLine();
-            //     const lastPoint = lastSeg.point;
-            //     if (currCertainLine) {
-            //         lastSeg.point = eventPoint;
-            //     }
-            // }
 
         }
     </script>
