@@ -27,52 +27,30 @@
 
 
 
-        let cp1HandleLine = new paper.Path();
-        let cp2HandleLine = new paper.Path();
-        let cp2 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
-        let cp1 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
-        cp1.fillColor = 'blue';
-        cp2.fillColor = 'blue';
-        cp1HandleLine.strokeColor = 'grey';
-        cp1HandleLine.dashArray = [5, 5]; // 设置虚线样式    
-        cp2HandleLine.strokeColor = 'grey';
-        cp2HandleLine.dashArray = [5, 5]; // 设置虚线样式    
-        cp1HandleLine.add([-10, -10], [-10, -10]);
-        cp2HandleLine.add([-10, -10], [-10, -10]);
 
-
-        let fixedLines = [];
+        let drewLines = [];
         let currCertainLine = null; //new paper.Path();;
         let clickExist = false;
         let drawing = false;
         let isDragging = false; // drag 松开时, cp 确定, 更新端点
+
+        // 当前的 controlPoint
+        let cp1, cp2, cp1HandleLine, cp2HandleLine;
         // click & drag 
         {
 
             // 监听鼠标点击事件
             function onMouseDown(event) {
                 drawing = true;
-
-                const newStart = startNewLineIfNoStartPoint(event);
-
-
-
-                // 绘制一个点
-                let rawPoint = new paper.Point(event.point.x, event.point.y);
-                let point = rawPoint;
-                let samePoint = existsSamePoint(recKeyPoints, point);
-
-                // end of curr line
-                let isSamePoint = false;
-                if (samePoint) {
-                    point = samePoint;
-                    isSamePoint = true;
+                let newStart = false;
+                if(!startPoint) {
+                    newStart = true;
+                    currCertainLine = startNewLine(event);
+                    putAPoint(event.point);
                 }
 
                 if (newStart) {
-                    drawAPoint(point);
-                } else {
-                    // putAPoint(point, isSamePoint);
+                    drawASmallCircle(event.point);
                 }
             }
 
@@ -88,8 +66,18 @@
             // 监听鼠标拖拽事件
             function onMouseDrag(event) {
                 if (!drawing) return;
+
+                const lastSeg = getLastSegmentOfCurrLine();
+                if(!isDragging) {
+                    // 创建 controlPoint
+                    let control = createControlPoint(lastSeg);
+                    cp1 = control.cp1;
+                    cp2 = control.cp2;
+                    cp1HandleLine = control.cp1HandleLine;
+                    cp2HandleLine = control.cp2HandleLine;
+                }
+                updateControlPoint(event, lastSeg, {cp1, cp2, cp1HandleLine, cp2HandleLine});
                 isDragging = true;
-                updateControlPoint(event);
             }
 
             // 监听鼠标Up事件
@@ -105,22 +93,15 @@
                 if (samePoint) {
                     point = samePoint;
                     isSamePoint = true;
-                }
-
-                if (isDragging) {
-                    isDragging = false;
-                    let lastSeg = getLastSegmentOfCurrLine();
-                    lastSeg.handleOut = cp1.position.subtract(lastSeg.point);
-                    currCertainLine.add(point);
-                }
-                else {
+                } else {
                     putAPoint(point, isSamePoint);
                 }
 
-                if (samePoint) {
-                    drawing = false;
-                    currCertainLine = null;
-                }
+
+
+                // if (samePoint) {
+                //     endOfDraw();
+                // }
 
             }
 
@@ -142,9 +123,10 @@
 
 
             function endOfDraw() {
-                fixedLines.push(currCertainLine)
                 drawing = false;
-                currCertainLine = null;
+                startPoint = null;
+                drewLines.push(currCertainLine)
+                // currCertainLine = null;
             }
 
 
@@ -156,47 +138,90 @@
             paper.view.onClick = onMouseClick;
             paper.view.onKeyDown = onKeyDown;
 
-            function startNewLineIfNoStartPoint(event) {
+            function startNewLine(event) {
 
-                if (!currCertainLine) {
-                    currCertainLine = new paper.Path();
-                    currCertainLine.strokeColor = 'black';
-                    window.currCertainLine = currCertainLine;
+                let currCertainLine = new paper.Path();
+                currCertainLine.strokeColor = 'black';
 
-                    putAPoint(event.point);
-
-                    currCertainLine.add(event.point);
-                    return true;
-                }
-                return false;
+                return currCertainLine;
             }
 
-            function updateControlPoint(event) {
-                const lastSeg = getLastSegmentOfCurrLine();
-                const lastPointInLine = lastSeg.point;
+            function updateControlPoint(event, seg, { cp1, cp2, cp1HandleLine, cp2HandleLine }) {
+                const pointOfSeg = seg.point;
                 const eventPoint = event.point;
                 cp1.position = eventPoint;
-                const delta = eventPoint.subtract(lastPointInLine);
-                cp2.position = lastPointInLine.subtract(delta);
-                lastSeg.handleIn = cp2.position.subtract(lastPointInLine);
-                cp1HandleLine.segments[0].point = lastPointInLine;
+                const delta = eventPoint.subtract(pointOfSeg);
+                cp2.position = pointOfSeg.subtract(delta);
+                seg.handleIn = cp2.position.subtract(pointOfSeg);
+                cp1HandleLine.segments[0].point = pointOfSeg;
                 cp1HandleLine.segments[1].point = cp1.position;
-                cp2HandleLine.segments[0].point = lastPointInLine;
-                cp2HandleLine.segments[1].point = cp2.position;                
-                // if (currCertainLine) {
-                //     let lastOne = currCertainLine.segments.length - 1;
-                //     if (currCertainLine._segments.length > 1) {
-                //         const lastPoint = currCertainLine.segments[lastOne].point;
-                //         // 以事件的点, 中心对称点作为控制点
-                //         currCertainLine.segments[lastOne].handleIn = cp1.position.subtract(lastPoint);
-                //     }
-                // }                
+                cp2HandleLine.segments[0].point = pointOfSeg;
+                cp2HandleLine.segments[1].point = cp2.position;                               
+            }
+
+            function createControlPoint(seg) {
+
+                let cp1HandleLine = new paper.Path();
+                let cp2HandleLine = new paper.Path();
+                let cp2 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
+                let cp1 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
+                cp1.fillColor = 'blue';
+                cp2.fillColor = 'blue';
+                cp1HandleLine.strokeColor = 'grey';
+                cp1HandleLine.dashArray = [5, 5]; // 设置虚线样式    
+                cp2HandleLine.strokeColor = 'grey';
+                cp2HandleLine.dashArray = [5, 5]; // 设置虚线样式    
+                cp1HandleLine.add([-10, -10], [-10, -10]);
+                cp2HandleLine.add([-10, -10], [-10, -10]);
+
+                cp1.on('mousedown', function(event) {
+                    event.stopPropagation();
+                });
+                cp1.on('mouseup', function (event) {
+                    event.stopPropagation();
+                    isDragging = false;
+                    let lastSeg = getLastSegmentOfCurrLine();
+                    lastSeg.handleOut = cp1.position.subtract(lastSeg.point);
+                    if(drawing){
+                        currCertainLine.add(event.point);  // 作为当前曲线的末端点                    
+                    }
+                    
+                });                
+                cp1.on('mousedrag', function (event) {
+                    event.stopPropagation();
+                    cp1.position = cp1.position.add(event.delta);
+                    cp1HandleLine.segments[1].point = cp1.position;
+                    seg.handleOut = cp1.position.subtract(seg.point);
+                });
+
+                cp2.on('mousedown', function (event) {
+                    event.stopPropagation();
+                });
+                cp2.on('mouseup', function (event) {
+                    event.stopPropagation();
+                    isDragging = false;
+                    let lastSeg = getLastSegmentOfCurrLine();
+                    lastSeg.handleOut = cp2.position.subtract(lastSeg.point);
+                    if (drawing) {
+                        currCertainLine.add(event.point);  // 作为当前曲线的末端点                    
+                    }
+                });
+                cp2.on('mousedrag', function (event) {
+                    event.stopPropagation();
+                    cp2.position = cp2.position.add(event.delta);
+                    cp2HandleLine.segments[1].point = cp2.position;
+                    seg.handleIn = cp2.position.subtract(seg.point);
+                });                
+
+                return { cp1HandleLine , cp2HandleLine, cp1, cp2 }
+                
             }
 
 
-            function drawAPoint(point) {
+            function drawASmallCircle(point) {
                 const pointShape = new paper.Path.Circle(point, 5);
                 pointShape.fillColor = 'black';
+                return pointShape;
             }
 
             function putAPoint(point, isSamePoint) {
