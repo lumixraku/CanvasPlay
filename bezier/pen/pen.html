@@ -25,12 +25,7 @@
         const recKeyPoints = [];
         let startPoint = null; // 记录点击位置的起点
         let endPoint = null;
-        let dashLine = null; // 虚线路径
-        dashLine = new paper.Path();
-        dashLine.strokeColor = 'black';
-        dashLine.dashArray = [5, 5]; // 设置虚线样式      
-        dashLine.add(new paper.Point(0, 0))
-        dashLine.add(new paper.Point(0, 0))
+
 
 
         let cp1 = new paper.Path.Circle(new paper.Point(-10, -10), 5);
@@ -41,7 +36,7 @@
 
 
         let fixedLines = [];
-        let currCertainLine = null;
+        let currCertainLine = null; //new paper.Path();;
         let clickExist = false;
         let drawing = false;
         let isBezierMode = false;
@@ -53,7 +48,7 @@
             function onMouseDown(event) {
                 drawing = true;
 
-                startNewLineIfNoStartPoint();
+                const newStart = startNewLineIfNoStartPoint(event);
 
 
 
@@ -68,8 +63,13 @@
                     point = samePoint;
                     isSamePoint = true;
                 }
+
+                if(newStart) {
+                    drawAPoint(point);
+                } else {
+                    // putAPoint(point, isSamePoint);
+                }
                  
-                putAPoint(point, isSamePoint);
 
 
               
@@ -83,7 +83,7 @@
                 if (isBezierMode) {
                     updateCurve(event);
                 } else {
-                    updateCurrPoint(event);
+                    updateLastPoint(event);
                 }
             }
 
@@ -123,8 +123,13 @@
                                                                
                     }
                     // updateCurve(event);
-                } else {
-                    putAPoint(point, isSamePoint);
+                } 
+                // else {
+                //     putAPoint(point, isSamePoint);
+                // }
+
+                if(samePoint) {
+                    drawing = false;
                 }
                 
             }
@@ -136,10 +141,6 @@
                     console.log('ESC键按下了');
                     drawing = false;
                     endPoint = startPoint;
-                    // if (startPoint) {
-                    //     let lastOne = dashLine.segments.length - 1;
-                    //     dashLine.segments[lastOne].point = startPoint;
-                    // }
                     endOfDraw();
                 }
             }
@@ -165,12 +166,19 @@
             paper.view.onClick = onMouseClick;
             paper.view.onKeyDown = onKeyDown;
 
-            function startNewLineIfNoStartPoint() {
+            function startNewLineIfNoStartPoint(event) {
+                
                 if (!currCertainLine) {
-                    currCertainLine = new paper.Path();                    
+                    currCertainLine = new paper.Path();      
                     currCertainLine.strokeColor = 'black';
                     window.currCertainLine = currCertainLine;
-                }                
+                    
+                    putAPoint(event.point);
+                    
+                    currCertainLine.add(event.point); 
+                    return true;
+                }
+                return false;                
             }
 
             function updateControlPoint(event) {
@@ -181,14 +189,22 @@
                 const delta = eventPoint.subtract(lastPoint);                
                 cp2.position = lastPoint.subtract(delta);
 
-                if (currCertainLine) {
-                    let lastOne = currCertainLine.segments.length - 1;
-                    if (currCertainLine._segments.length > 1) {
-                        const lastPoint = currCertainLine.segments[lastOne].point;
-                        // 以事件的点, 中心对称点作为控制点
-                        currCertainLine.segments[lastOne].handleIn = cp2.position.subtract(lastPoint);
-                    }
-                }                
+                lastSeg.handleIn = cp2.position.subtract(lastPoint);
+
+                // if (currCertainLine) {
+                //     let lastOne = currCertainLine.segments.length - 1;
+                //     if (currCertainLine._segments.length > 1) {
+                //         const lastPoint = currCertainLine.segments[lastOne].point;
+                //         // 以事件的点, 中心对称点作为控制点
+                //         currCertainLine.segments[lastOne].handleIn = cp1.position.subtract(lastPoint);
+                //     }
+                // }                
+            }
+
+
+            function drawAPoint(point) {
+                const pointShape = new paper.Path.Circle(point, 5);
+                pointShape.fillColor = 'black';                
             }
 
             function putAPoint(point, isSamePoint){
@@ -206,17 +222,14 @@
                 }
             }
 
-            function updateCurrPoint(event) {
+            function updateLastPoint(event) {
                 // 更新点的位置
-                const lastIdx = currCertainLine.segments.length -1;
-                const lastPoint = currCertainLine.segments[lastIdx].point;
-                dashLine.segments[0].point = lastPoint;
-                dashLine.segments[1].point = event.point;
+                const lastSeg = getLastSegmentOfCurrLine();
+                lastSeg.point = event.point;
             }
 
-
             function getLastSegmentOfCurrLine() {
-                let lastOne = Math.max( 0, currCertainLine.segments.length - 1);
+                let lastOne = Math.max(0, currCertainLine.segments.length - 1);
                 return currCertainLine.segments[lastOne];
                 
             }
