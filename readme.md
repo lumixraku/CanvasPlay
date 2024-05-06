@@ -1,16 +1,29 @@
-# 一些 Canvas 相关的练习
+# Rsbuild Project
 
-## opentype.js 提取一串文本文字的路径并做模糊
+## Setup
 
-font/opentype-fontpath.html
+Install the dependencies:
 
-![font path](./public/img/font-path.jpg "font path")
+```bash
+pnpm install
+```
 
-## 通过 paperjs 绘制可交互 bezier 曲线
+## Get Started
 
-一段三阶 bezier 曲线 bezier/using-paperjs-lib/bezier.html
+Start the dev server:
 
-多段三阶 bezier 曲线 bezier/using-paperjs-lib/two-bezier.html
+```bash
+pnpm dev
+```
 
-![bezier1](./public/img/bezier1.jpg "bezier")
-![bezier2](./public/img/two-bezier.jpg "bezier")
+Build the app for production:
+
+```bash
+pnpm build
+```
+
+Preview the production build locally:
+
+```bash
+pnpm preview
+```

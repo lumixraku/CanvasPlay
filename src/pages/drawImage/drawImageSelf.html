@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%;">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body style="height: 100%;">
+  <canvas id="myCanvas" width="2000" height="2000" style="width: 500px; height:500px;"></canvas>
+  <script>
+
+    const canvas = document.getElementById('myCanvas');
+    const context = canvas.getContext('2d');
+    const tempCanvas = document.createElement('canvas');
+    const tempContext = tempCanvas.getContext('2d');
+    // 关键! 否则会模糊  因为 drawImage 的 x y 可能是小数
+    // canvas 自带的抗锯齿可能使得图像边缘模糊
+    // 要么 drawImage 每次坐标都取整, 要么关掉抗锯齿
+    context.imageSmoothingEnabled = false;
+    tempContext.imageSmoothingEnabled = false; 
+
+    // 设置临时 Canvas 的大小与原始 Canvas 相同
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    // 绘制初始内容
+
+    function initcanvas() {
+      const blockSize = 100; // 每个色块的大小
+      const colors = [
+        '#00BFFF', // Deep Sky Blue
+        '#1E90FF', // Dodger Blue
+        '#6495ED', // Cornflower Blue
+        '#87CEEB', // Sky Blue
+        '#87CEFA', // Light Sky Blue
+        '#ADD8E6', // Light Blue
+        '#B0C4DE', // Light Steel Blue
+        '#B0E0E6', // Powder Blue
+        '#4682B4', // Steel Blue
+        '#4169E1', // Royal Blue
+        '#6A5ACD', // Slate Blue
+        '#7B68EE', // Medium Slate Blue
+        '#8A2BE2', // Blue Violet
+        '#9370DB', // Medium Purple
+        '#9932CC', // Dark Orchid
+        '#BA55D3', // Medium Orchid
+        '#800080', // Purple
+        '#8B008B', // Dark Magenta
+        '#4B0082', // Indigo
+        '#483D8B', // Dark Slate Blue
+        // 添加更多的颜色...
+      ];
+      for (let row = 0; row < 20; row++) {
+        for (let col = 0; col < 20; col++) {
+          const randomColorIndex = Math.floor(Math.random() * colors.length);
+          const color = colors[randomColorIndex];
+
+          const x = col * blockSize;
+          const y = row * blockSize;
+
+          context.fillStyle = color;
+          context.fillRect(x, y, blockSize, blockSize);
+        }
+      }
+      context.globalCompositeOperation = 'copy';
+
+
+    }
+    initcanvas();
+
+
+    let lastPosX = 0;
+    let lastPosY = 0;
+    function offset(offsetX, offsetY) {
+      // context.save();
+      // 贴上位移后的图像
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.drawImage(canvas, offsetX, offsetY);
+
+
+      // 方法2
+      // tempContext.clearRect(0, 0, canvas.width, canvas.height);
+      // // 将原始 Canvas 的内容绘制到临时 Canvas 上
+      // tempContext.drawImage(canvas, 0, 0, canvas.width, canvas.height);
+
+      // // 清空原始 Canvas
+      // context.clearRect(0, 0, canvas.width, canvas.height);
+
+      // context.globalCompositeOperation = 'source-over';
+
+      // // 绘制临时 Canvas，并使用 offsetX 和 offsetY 进行偏移
+      // context.drawImage(tempCanvas, Math.floor(offsetX), Math.floor(offsetY), canvas.width, canvas.height);
+      // context.restore();
+
+    }
+
+    function handler() {
+      document.body.addEventListener('pointermove', handleMouseMove);
+      document.body.addEventListener('pointerdown', handleMouseDown);
+      document.body.addEventListener('pointerup', handleMouseUp);
+      document.body.addEventListener('pointercancel', handleMouseUp);
+      document.body.addEventListener('pointerleave', handleMouseUp);
+
+      let previousX = 0;
+      let previousY = 0;
+      let moving = false;
+
+      function handleMouseDown(event) {
+        previousX = event.offsetX; // 获取鼠标在 canvas 上的相对水平位置
+        previousY = event.offsetY; // 获取鼠标在 canvas 上的相对垂直位置
+        moving = true;
+      }
+
+      function handleMouseMove(event) {
+        if (!moving) return;
+        const currentX = event.offsetX; // 获取鼠标在 canvas 上的相对水平位置
+        const currentY = event.offsetY; // 获取鼠标在 canvas 上的相对垂直位置
+
+        const offsetX = currentX - previousX; // 计算水平偏移量
+        const offsetY = currentY - previousY; // 计算垂直偏移量
+
+        // 在这里可以使用 offsetX 和 offsetY 值进行后续操作
+        console.time('offset');
+        offset(offsetX, offsetY);
+        console.timeEnd('offset');
+        previousX = currentX;
+        previousY = currentY;
+      }
+
+      function handleMouseUp() {
+        moving = false;
+      }
+
+
+    }
+    handler();
+
+    function throttle(func, delay) {
+      let timerId;
+      let lastExecutedTime = 0;
+
+      return function (...args) {
+        const currentTime = Date.now();
+        const timeSinceLastExecution = currentTime - lastExecutedTime;
+
+        clearTimeout(timerId);
+
+        if (timeSinceLastExecution > delay) {
+          func.apply(this, args);
+          lastExecutedTime = currentTime;
+        } else {
+          timerId = setTimeout(() => {
+            func.apply(this, args);
+            lastExecutedTime = currentTime;
+          }, delay - timeSinceLastExecution);
+        }
+      };
+    }
+
+
+
+  </script>
+</body>
+
+</html>

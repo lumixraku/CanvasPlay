@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <canvas id="myCanvas" width="400" height="400" style="border:1px solid #000000;"></canvas>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 矩形的左上角坐标和尺寸
+        const rectX = 50;
+        const rectY = 50;
+        const rectWidth = 100;
+        const rectHeight = 50;
+
+        // 计算矩形中心点坐标
+        const centerX = rectX + rectWidth / 2;
+        const centerY = rectY + rectHeight / 2;
+
+        // 保存当前变换状态
+        ctx.save();
+
+        // 将画布原点移动到矩形的中心点
+        ctx.translate(centerX, centerY);
+
+        // 放大矩形到之前的两倍
+        ctx.scale(2, 2);
+
+        // 将画布原点移回原来的位置
+        ctx.translate(-centerX, -centerY);
+
+        // 绘制放大后的矩形
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+
+        // 恢复之前的变换状态
+        ctx.restore();
+    </script>
+</body>
+
+</html>

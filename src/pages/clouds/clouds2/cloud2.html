@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Volume Cloud Effect</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="./three.min.js"></script>
+    <script id="volumeCloudV" type="x-shader/x-vertex">
+varying vec3 vPosition;
+varying vec3 vNormal;
+varying vec2 vUv;
+varying vec3 vPositionW;
+varying vec3 vNormalW;
+attribute vec3 color;
+varying vec3 vColor;
+varying vec4 viewerUV;
+
+float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+void main() {
+    vPosition = position;
+    vNormal = normalMatrix * normal;
+    vPositionW = vec3( modelMatrix*vec4( position, 1.0 ));
+    vNormalW = normalize( vec3( vec4( normal, 0.0 ) * modelMatrix ) );
+
+    vUv = uv;
+    vColor=color;
+
+    #ifdef USE_INSTANCING
+      vPositionW = vec3(instanceMatrix * vec4(vPositionW,1.));
+      vec3 instPosition = vec3(instanceMatrix * vec4(vec3(0.),1.));
+    #endif
+
+    #ifdef USE_INSTANCING
+      vPosition = vec3(instanceMatrix * vec4(vPosition,1.));
+    #endif
+
+    //uv为随机值
+    vec2 wh = vec2(2.,4.);
+    float rn = ceil(random(instPosition.xy)*wh.x*wh.y);
+    vec2 cell = vec2(1.,1.)/wh;vUv = uv/wh;
+    vUv+=vec2(cell.x*mod(rn,wh.x),cell.y*(ceil(rn/wh.x)-1.));
+    
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(vPosition, 1.0);
+    viewerUV = projectionMatrix*modelViewMatrix * vec4(vPosition, 1.0);
+    viewerUV = vec4((viewerUV.xyz / viewerUV.w).xy* 0.5 + 0.5,0.,1.);
+}
+  </script>
+    <script id="volumeCloudF" type="x-shader/x-fragment">
+varying vec3 vPosition;
+varying vec3 vNormal;
+varying vec2 vUv;
+varying vec3 vPositionW;
+varying vec3 vNormalW;
+
+uniform sampler2D cloudTexture;
+
+uniform vec3 color_1;
+uniform float color_intensity_1;
+uniform vec3 color_2;
+uniform float color_intensity_2;
+
+float random(vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+vec3 rrt_odt_fit(vec3 v)
+{
+    vec3 a = v*(         v + 0.0245786) - 0.000090537;
+    vec3 b = v*(0.983729*v + 0.4329510) + 0.238081;
+    return a/b;
+}
+vec3 inv_rrt_odt_fit(vec3 v)
+{
+    vec3 a = -(sqrt(10.)*sqrt((-187248350.*pow(v,vec3(2.)))+232585567.*v+241290.)+21650.*v-1230.);
+    vec3 b = (98370.*v-100000.);
+    return a/b;
+}
+
+mat3 mat3_from_rows(vec3 c0, vec3 c1, vec3 c2)
+{
+    mat3 m = mat3(c0, c1, c2);
+    m = transpose(m);
+
+    return m;
+}
+
+vec3 mul(mat3 m, vec3 v)
+{
+    return m * v;
+}
+
+mat3 mul(mat3 m1, mat3 m2)
+{
+    return m1 * m2;
+}
+
+vec3 aces_fitted(vec3 color)
+{
+    mat3 ACES_INPUT_MAT = mat3_from_rows(
+        vec3( 0.59719, 0.35458, 0.04823),
+        vec3( 0.07600, 0.90834, 0.01566),
+        vec3( 0.02840, 0.13383, 0.83777));
+
+    mat3 ACES_OUTPUT_MAT = mat3_from_rows(
+        vec3( 1.60475,-0.53108,-0.07367),
+        vec3(-0.10208, 1.10813,-0.00605),
+        vec3(-0.00327,-0.07276, 1.07602));
+
+    color = mul(ACES_INPUT_MAT, color);
+
+    // Apply RRT and ODT
+    color = rrt_odt_fit(color);
+
+    color = mul(ACES_OUTPUT_MAT, color);
+
+    return color;
+}
+vec3 ACES_Inv(vec3 color)
+{
+    mat3 ACES_INPUT_MAT = mat3_from_rows(
+        vec3( 1.76474, -0.67577, -0.08896),
+        vec3( -0.14702, 1.16025, -0.01322),
+        vec3( -0.03633, -0.16243, 1.19877));
+
+    mat3 ACES_OUTPUT_MAT = mat3_from_rows(
+        vec3( 0.64304, 0.31119,0.04578),
+        vec3(0.05926, 0.93144, 0.00929),
+        vec3(0.00596,0.06393, 0.93012));
+
+    color = mul(ACES_OUTPUT_MAT, color);
+    
+    // Apply RRT and ODT
+    color = inv_rrt_odt_fit(color);
+
+    color = mul(ACES_INPUT_MAT, color);
+
+    return color;
+}
+
+vec3 PowVec3(vec3 v, float p)
+{
+    return vec3(pow(v.x, p), pow(v.y, p), pow(v.z, p));
+}
+
+const float gamma = 2.2;
+vec3 ToSRGB(vec3 v) { return PowVec3(v, 1.0/gamma); }
+
+void main() {
+    vec4 col = texture(cloudTexture,vUv);
+    vec3 mask = col.rgb;
+
+    vec3 col_r = mix(color_1*color_intensity_1,color_2*color_intensity_2,vec3(pow(mask.r,0.6)));
+
+    col = vec4(col_r,col.a);
+    col.rgb = ACES_Inv(col.rgb);
+    gl_FragColor = vec4(col);
+}
+  </script>
+    <script>
+        async function main() {
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BoxGeometry(4, 4, 4);
+
+
+
+            const textureLoader = new THREE.TextureLoader();
+            const texture_Cloud = await new Promise((resolve, reject) => {
+                textureLoader.load(
+                    './Tex_0062.png',
+                    resolve,
+                    undefined,
+                    reject
+                );
+            });
+
+            const uniforms = {
+                time: { value: 0.0 },
+                cameraPos: { value: camera.position },
+                cloudTexture: { value: texture_Cloud },
+                color_1: { value: new THREE.Color("#00a2f0") },
+                color_intensity_1: { value: 1 },
+                color_2: { value: new THREE.Color("#f0f0f5") },
+                color_intensity_2: { value: 1 },
+            };
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: document.getElementById('volumeCloudV').textContent,
+                fragmentShader: document.getElementById('volumeCloudF').textContent,
+                defines: {
+                    USE_INSTANCING: true, // 定义宏 USE_INSTANCING
+                },  
+            });
+
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                uniforms.time.value += 0.01;
+                renderer.render(scene, camera);
+            }
+
+            animate();
+
+        }
+        main();
+
+    </script>
+</body>
+
+</html>

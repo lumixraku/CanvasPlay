@@ -9,6 +9,7 @@ export const PointInPolygon: FC = () => {
         // 获取 canvas 元素
         const canvas = canvasRef.current! as HTMLCanvasElement;
         const ctx = canvas.getContext('2d')!;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // 绘制多边形
         function drawPolygon(points: number[][]) {
@@ -87,7 +88,7 @@ export const PointInPolygon: FC = () => {
         <h2>PointInPolygon</h2>
         <canvas ref={canvasRef} id="myCanvas" width="800" height="600"></canvas>
         参考
-        https://www.bilibili.com/video/BV1ce4y1j7a6/?spm_id_from=333.337.search-card.all.click&vd_source=66ae80b89912671707a9b77834e03720
+        <a href="https://www.bilibili.com/video/BV1ce4y1j7a6/?spm_id_from=333.337.search-card.all.click&vd_source=66ae80b89912671707a9b77834e03720" className="text-blue-600 hover:text-blue-800 visited:text-purple-600 underline hover:underline-offset-2 transition duration-150 ease-in-out">点是否在多边形内问题算法深度剖析</a>
 
         <p>
             其中提到了使用矢量的方法判断, 做叉积, 但是不推荐.

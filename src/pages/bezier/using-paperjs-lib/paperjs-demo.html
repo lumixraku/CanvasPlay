@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <canvas id="canvas1"></canvas>
+    <canvas id="canvas2" width="600" height="600"></canvas>
+    <canvas id="canvas3" width="600" height="600"></canvas>
+    <canvas id="canvas4" width="600" height="600"></canvas>
+    <script src="https://unpkg.com/lil-gui@0.19.2/dist/lil-gui.umd.js"></script>
+    <script src="/public/paper-full.js"></script>
+    <script>
+        const gui = new lil.GUI();        
+    </script>
+    <script>
+
+        // canvas1
+        {
+            // Get a reference to the canvas object
+            let canvas = document.getElementById('canvas1');
+            // Create an empty project and a view for the canvas:
+            paper.setup(canvas);
+            // Create a Paper.js Path to draw a line into it:
+            let path2 = new paper.Path();
+            // Give the stroke a color
+            path2.strokeColor = 'black';
+            let start = new paper.Point(100, 100);
+            // Move to start and draw a line from there
+            path2.moveTo(start);
+            // Note that the plus operator on Point objects does not work
+            // in JavaScript. Instead, we need to call the add() function:
+            path2.lineTo(start.add([200, -50]));
+            // Draw the view now:
+            paper.view.draw();
+        }
+
+        {
+            paper.install(window);
+            // Get a reference to the canvas object
+            let canvas = document.getElementById('canvas2');
+            // Create an empty project and a view for the canvas:
+            paper.setup(canvas);
+            // Create a Paper.js Path to draw a line into it:
+
+            let path = new Path();
+            path.strokeColor = 'black';
+            let start = new Point(100, 100);
+            path.moveTo(start);
+            path.lineTo(start.add([200, -50]));
+            // view.draw();                
+
+            let path2 = new Path.Circle({
+                center: new Point(50, 50),
+                radius: 50
+            });
+            path2.fillColor = 'red';
+
+            // Set the fillColor to null to remove it:
+            // path2.fillColor = null;
+
+            // Draw the view now:
+            // view.draw();
+
+            let myPath = new Path({
+                segments: [[40, 115], [80, 180], [200, 20], [40, 115]],
+                selected: true
+            });
+            myPath.fillColor = 'rgba(122, 255, 255, 1)';
+            myPath.strokeColor = '#665698';
+            myPath.strokeWidth = 10;
+            myPath.strokeJoin = 'round';
+            myPath.strokeCap = 'round';
+            // myPath.dashArray = [10, 12];
+
+            let myStyle = {
+                strokeColor: '#117966',
+                fillColor: '#a2f0e7',
+                strokeWidth: 5,
+                dashArray: [10, 12],
+                strokeCap: 'round',
+            };
+
+            let myCircle = new Path.Circle({
+                center: [300, 100],
+                radius: 50
+            });
+            myCircle.style = myStyle;
+        }        
+    </script>
+
+    <script type="text/javascript" canvas="canvas4">
+        let canvas = document.getElementById('canvas4');
+        // Create an empty project and a view for the canvas:
+        paper.setup(canvas);
+        let values = {
+            points: 20,
+            radius: 20,
+            initialRadius: 10
+        };
+        let myStyle = {
+            strokeColor: '#117966',
+            fillColor: '#a2f0e7',
+            strokeWidth: 5,
+            dashArray: [10, 12],
+            strokeCap: 'round',
+        };
+        // gui.add(point, 'angle', 0, 100).onChange(()=>{
+        //     console.log('anbgle')
+        //     draw();
+        // });
+
+        for (let i = 0; i < 30; i++) {
+            let path = new Path({
+                fillColor: i % 2 ? '#238866' : '#456688',
+                // closed: true
+            });
+
+            let point = new Point({
+                length: values.initialRadius + values.radius * i,
+                angle: 0
+            });
+            for (let j = 0; j <= values.points; j++) {
+                point.angle += values.points;
+                const p = new Point({
+                    x: view.center.x,
+                    y: view.center.y,
+                });
+                const s = new Point(p.x + point.x, p.y + point.y)
+                if (j == 0) {
+                    path.add(s);
+                } else {
+                    path.arcTo(s);
+                }
+            }
+            // project.activeLayer.insertChild(0, path);
+            // project.activeLayer.children.reverse();
+            path.selected = true;
+            project.activeLayer.addChild(path);
+        }
+        project.activeLayer.children.reverse();
+    </script>
+
+
+
+</body>
+
+</html>

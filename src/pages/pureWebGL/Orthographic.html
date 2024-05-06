@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    html,
+    body,
+    canvas {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    p {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="cnv" width="800" height="600"></canvas>
+
+  <!-- <p>Created by Jérémy Heleine for <a href="https://codepen.io/SitePoint/pen/obapXL">CodePen</a></p>
+
+
+  https://juejin.im/entry/5aac7d90518825556918c0b7 -->
+  <script>
+
+    var Vertex = function (x, y, z) {
+      this.x = parseFloat(x);
+      this.y = parseFloat(y);
+      this.z = parseFloat(z);
+    };
+
+    var Vertex2D = function (x, y) {
+      this.x = parseFloat(x);
+      this.y = parseFloat(y);
+    };
+
+    var Cube = function (center, side) {
+      //
+      // Generate the vertices
+      // side 是立方体边长  目前边长设定的是屏幕高度的一半
+      var d = side / 2;
+
+
+      // 后来我调整为了右手坐标系
+      this.vertices = [
+        //0近面左下顶点
+        new Vertex(center.x - d, center.y - d, center.z + d),
+
+        //1远面(背面)左下顶点
+        new Vertex(center.x - d, center.y - d, center.z - d),
+
+        //2远面(背面)右下顶点
+        new Vertex(center.x + d, center.y - d, center.z - d),
+
+        //3近面右下顶点
+        new Vertex(center.x + d, center.y - d, center.z + d),
+
+        //4近面右上顶点
+        new Vertex(center.x + d, center.y + d, center.z + d),
+
+        //5远面(背面)右上顶点
+        new Vertex(center.x + d, center.y + d, center.z - d),
+
+        //6远面左上顶点
+        new Vertex(center.x - d, center.y + d, center.z - d),
+
+        //7近面左上顶点
+        new Vertex(center.x - d, center.y + d, center.z + d)
+      ];
+      console.log("vectices", this.vertices)
+
+      // Generate the faces
+
+      // 之前的顺序是  底面  右边侧面  顶面  左边侧面  近面(正面)  远面(背面)
+      // 最后绘制的是远面(背面) 本例子中没有遮挡剔除  所以实际绘制后默认看的是背面 不符合预期
+      // 现在改变一下顺序  每一轮绘制最后画的是近面
+      this.faces = [
+        // 底面
+        [this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[3]],
+
+        // 右边侧面
+        [this.vertices[3], this.vertices[2], this.vertices[5], this.vertices[4]],
+
+        // 顶面
+        [this.vertices[4], this.vertices[5], this.vertices[6], this.vertices[7]],
+
+        // 左边侧面
+        [this.vertices[7], this.vertices[6], this.vertices[1], this.vertices[0]],
+
+        // 远面(背面)
+        [this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]],
+
+        // 近面(正面)
+        [this.vertices[7], this.vertices[0], this.vertices[3], this.vertices[4]],
+
+      ];
+    };
+
+    //
+    function projectMatrix(M, dx, dy) {
+      // 在得到3D世界的坐标转为2D坐标的时候 需要注意3D世界坐标越往上, y 越大
+      // 但是canvas 中, 2D的坐标原点在左上角 所以要写为 -M.y
+      // P.x + dx, -P.y + d
+
+      // scale to [-1, 1] cuboid
+      // 先假设视体 frustum 是一个立方体, 且已经在(0,0,0)的位置  边长为2dx 也就是屏幕的宽度
+      // PS: 这个 0, 0 是指逻辑位置 物理上在屏幕上是屏幕的中心
+      var r=dx, b=dx, n = dx
+      var l=-dx, t=-dx, f = -dx
+      // 本例子使用右手坐标系 (摄像机面向 -Z 方向 越远 z 越小)
+
+
+      var offsetX = -(r + l) / 2
+      var offsetY = -(b + t) / 2
+      var offsetZ = -(n + f) / 2
+
+      let Mo = new Vertex(M.x, M.y, M.z)
+      Mo.x = 2 / (r - l) * M.x + offsetX
+      Mo.y = 2 / (b - t) * M.y + offsetY
+      Mo.z = 2 / (n - f) * M.z + offsetZ
+
+      return Mo
+    }
+
+    // Canonical Cube to Screen
+    function CanonicalCubeToScreen(Mo, dx, dy) {
+      let p = new Vertex(Mo.x, Mo.y, Mo.z);
+      p.x = dx * p.x + dx
+      p.y = -dx * p.y + dy  // 这里需要注意 canvas的 y 坐标是反过来的
+
+      return p
+    }
+
+
+    function render(objects, ctx, dx, dy) {
+      // Clear the previous frame
+      ctx.clearRect(0, 0, 2 * dx, 2 * dy);
+
+      // dx  dy 是定值 (屏幕宽高的一半) 所以 (dx, dy) 就是屏幕的中心位置
+
+      // For each object
+      for (var i = 0, n_obj = objects.length; i < n_obj; ++i) {
+        // For each face
+        for (var j = 0, n_faces = objects[i].faces.length; j < n_faces; ++j) {
+          // Current face
+          var face = objects[i].faces[j];
+
+
+          if (j == 5) {
+            ctx.strokeStyle = "#FFFF00";
+            ctx.fillStyle = "#FFFF00";
+          } else {
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+            ctx.fillStyle = 'rgb(0, 150, 255)';
+          }
+
+          // Draw the first vertex
+          // var P = project(face[0]);
+          var coCube = projectMatrix(face[0], dx, dy)
+          var P = CanonicalCubeToScreen(coCube, dx, dy)
+          // var P = projectMatrix(face[0], dx, dy)
+          // console.log(`x: ${face[0].x}, y: ${face[0].y},   z: ${face[0].z}`)
+
+          ctx.beginPath();
+
+
+          // ctx.moveTo(P.x + dx, -P.y + dy);
+          ctx.moveTo(P.x, P.y);
+          // Draw the other vertices
+          for (var k = 1, n_vertices = face.length; k < n_vertices; ++k) {
+
+            coCube = projectMatrix(face[k], dx, dy)
+            P = CanonicalCubeToScreen(coCube, dx, dy)
+            ctx.lineTo(P.x, P.y);
+            // ctx.lineTo(P.x + dx, -P.y + dy);
+
+          }
+
+          // Close the path and draw the face
+          ctx.closePath();
+          ctx.stroke();
+          ctx.fill();
+        }
+      }
+    }
+
+    (function () {
+      // Fix the canvas width and height
+      var canvas = document.getElementById('cnv');
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      var dx = canvas.width / 2;
+      var dy = canvas.height / 4;
+
+      // Objects style
+      var ctx = canvas.getContext('2d');
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
+
+      // Create the cube
+      var cube_center = new Vertex(0, 0, -25);
+      var cube = new Cube(cube_center, dy);
+      var objects = [cube];
+
+      // First render
+      render(objects, ctx, dx, dy);
+
+      // Events
+      var mousedown = false;
+      var mx = 0;
+      var my = 0;
+
+      canvas.addEventListener('mousedown', initMove);
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', stopMove);
+
+      canvas.addEventListener('touchstart', initMove);
+      document.addEventListener('touchmove', move);
+      document.addEventListener('touchend', stopMove);
+
+      // Rotate a vertice
+      function rotate(M, center, theta, phi) {
+        // theta 是角度对应的的一半弧度
+        // phi 因为是角度对应弧度
+
+        // Rotation matrix coefficients
+        // theta = 0
+        var ct = Math.cos(theta);
+        var st = Math.sin(theta);
+        // 之前 theta 是控制在 z 轴上的旋转 (因为我强制phi = 0 后发现是这样的)
+        // 和预期不符合 我希望theta 应该是控制 y 轴方向上的旋转  应该影响 z x
+
+        // phi = 0
+        // phi 是绕 x 轴方向旋转的 这是在我强制 theta = 0 之后发现的
+        // 影响 y z
+        var cp = Math.cos(phi);
+        var sp = Math.sin(phi);
+
+
+        // Rotation
+        var x = M.x - center.x;
+        var y = M.y - center.y;
+        var z = M.z - center.z;
+
+
+        // 这是原来的写法  (原先codepen 这个例子 z 表示纵轴  和常识不符)
+        // 以下是根据先 绕 X 轴旋转, 再绕 Z 轴旋转得到 (右手坐标系)
+        // M.x = ct * x - st * cp * y + st * sp * z + center.x;
+        // M.y = st * x + ct * cp * y - ct * sp * z + center.y;
+        // M.z = sp * y + cp * z + center.z;
+
+
+        // 现在改好了  ct st 控制在 y 轴上的旋转  cp  sp 控制在 x 轴上的旋转
+        // 下面是 先绕 x 轴旋转  后绕 Y 轴旋转得到的结果
+        M.x = ct * x + st * sp * y + st * cp * z + center.x;
+        M.y = cp * y - sp * z + center.y;
+        M.z = -st * x + ct * sp * y + ct * cp * z + center.z;
+      }
+
+      // Initialize the movement
+      function initMove(evt) {
+        clearTimeout(autorotate_timeout);
+        mousedown = true;
+        mx = evt.clientX || evt.touches[0].clientX;
+        my = evt.clientY || evt.touches[0].clientY;
+      }
+
+      function move(evt) {
+        let clientX = evt.clientX || evt.touches[0].clientX;
+        let clientY = evt.clientY || evt.touches[0].clientY;
+
+        if (mousedown) {
+          var theta = (clientX - mx) * Math.PI / 360;
+          var phi = (clientY - my) * Math.PI / 180;
+
+          for (var i = 0; i < 8; ++i) {
+            rotate(cube.vertices[i], cube_center, theta, phi);
+          }
+
+          mx = clientX;
+          my = clientY;
+
+          render(objects, ctx, dx, dy);
+        } else {
+          mx = clientX;
+          my = clientY;
+          ctx.clearRect(0, 0, 50, 20)
+          ctx.fillText(`${mx}, ${my}`, 10, 10);
+        }
+      }
+
+      function stopMove() {
+        mousedown = false;
+        autorotate_timeout = setTimeout(autorotate, 2000);
+      }
+
+      function autorotate() {
+        // for (var i = 0; i < 8; ++i)
+        // 	rotate(cube.vertices[i], cube_center, -Math.PI / 720, Math.PI / 720);
+        //   render(objects, ctx, dx, dy);
+        //   autorotate_timeout = setTimeout(autorotate, 30);
+      }
+      autorotate_timeout = setTimeout(autorotate, 2000);
+    })();
+
+
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bezier Curve Sampling</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="400" height="400"></canvas>
+
+  <script>
+    // 获取 Canvas 元素和上下文
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 定义贝塞尔曲线的控制点
+    const p0 = { x: 50, y: 200 };
+    const p1 = { x: 200, y: 50 };
+    const p2 = { x: 350, y: 200 };
+
+    // 定义采样点数量
+    const sampleCount = 50;
+
+    // 计算贝塞尔曲线上的采样点
+    function sampleQuadraticBezierCurve(p0, p1, p2, sampleCount) {
+      const samples = [];
+
+      for (let i = 0; i <= sampleCount; i++) {
+        const t = i / sampleCount;
+        const point = quadraticBezierCurve(p0, p1, p2, t);
+        samples.push(point);
+      }
+
+      return samples;
+    }
+
+    // 计算贝塞尔曲线上的点
+    function quadraticBezierCurve(p0, p1, p2, t) {
+      const u = 1 - t;
+      const tt = t * t;
+      const uu = u * u;
+
+      // 二阶贝塞尔曲线
+      // B(t) = (1 - t)^2 * P0 + 2 * (1 - t) * t * P1 + t^2 * P2
+      const p = {
+        x: uu * p0.x + 2 * u * t * p1.x + tt * p2.x,
+        y: uu * p0.y + 2 * u * t * p1.y + tt * p2.y,
+      };
+
+      return p;
+    }
+
+    // 绘制贝塞尔曲线和采样点
+    function drawBezierCurve() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 绘制贝塞尔曲线
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y);
+      ctx.quadraticCurveTo(p1.x, p1.y, p2.x, p2.y);
+      ctx.stroke();
+
+      // 绘制采样点
+      const samples = sampleQuadraticBezierCurve(p0, p1, p2, sampleCount);
+      ctx.fillStyle = 'red';
+      for (const sample of samples) {
+        ctx.beginPath();
+        ctx.arc(sample.x, sample.y, 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 调用绘制函数
+    drawBezierCurve();
+  </script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Three.js Typeface JSON Font Example</title>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // 创建场景
+        var scene = new THREE.Scene();
+
+        // 创建相机
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // 设置渲染器并添加至文档
+        var renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // 创建光源
+        var light = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+        scene.add(light);
+
+        // 设置相机位置
+        camera.position.z = 15;
+
+        // 加载typeface.json字体文件
+        var loader = new THREE.FontLoader();
+        loader.load('/font/font.json', function (font) {
+
+            // 创建文本几何体
+            var textGeometry = new THREE.TextGeometry('圣诞节看电视Hello Three.js!', {
+                font: font,
+                size: 2,
+                height: 0.2,
+                curveSegments: 12,
+            });
+
+            // 创建材质
+            var textMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+
+            // 创建文本网格
+            var textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.x -= 10;
+            // 添加文本网格至场景
+            scene.add(textMesh);
+
+            // 渲染循环
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        });
+
+    </script>
+</body>
+
+</html>

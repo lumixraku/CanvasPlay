@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Complex Shape with Hollow Part</title>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="500" height="300" style="border:1px solid #000000;"></canvas>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 绘制一个较大的红色圆形
+        ctx.beginPath();
+        ctx.arc(250, 150, 100, 0, 2 * Math.PI);
+        ctx.fillStyle = 'red';
+        ctx.fill();
+
+        // 绘制一个空心的白色圆形
+        ctx.beginPath();
+        ctx.arc(250, 150, 50, 0, 2 * Math.PI);
+        ctx.fillStyle = 'white';
+        ctx.fill();
+
+        // 绘制两个交叉的矩形
+        // ctx.fillStyle = 'blue';
+        // ctx.fillRect(200, 100, 100, 20); // 水平矩形
+        // ctx.fillRect(240, 60, 20, 180);  // 垂直矩形
+
+        // 添加阴影属性以增强视觉效果
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 5;
+        ctx.shadowOffsetX = 25;
+        ctx.shadowOffsetY = 25;
+
+        // 绘制一个外围的圆环
+        ctx.beginPath();
+        ctx.arc(250, 150, 120, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'green';
+        ctx.lineWidth = 10;
+        ctx.stroke();
+    </script>
+</body>
+
+</html>

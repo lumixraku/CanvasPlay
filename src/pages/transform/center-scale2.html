@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+    <canvas id="myCanvas" width="400" height="400" style="border:1px solid #000000;"></canvas>
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        // 缩放因子
+        function zoomFromRectCenter() {
+            const scale = 2;
+            // 矩形的左上角坐标和尺寸
+            const rectX = 200;
+            const rectY = 200;
+            const rectWidth = 100;
+            const rectHeight = 50;
+
+            // 计算矩形中心点坐标
+            const centerX = rectX + rectWidth / 2; // 100
+            const centerY = rectY + rectHeight / 2; // 75
+
+
+            // ctx.transform(a, b, c, d, e, f) 方法应用的变换顺序如下：
+
+            // 缩放(a 和 d): 首先，水平方向上缩放 a 倍，垂直方向上缩放 d 倍。缩放是围绕画布的原点（0, 0）进行的。
+            // 旋转(b 和 c): 接着，画布会根据 b 和 c 参数进行旋转。旋转同样是围绕原点（0, 0）进行的。
+            // 平移(e 和 f): 最后，画布会根据 e 和 f 参数进行平移。这个平移是相对于缩放和旋转之后的新原点进行的。
+
+
+
+            // 应用变换
+            // ctx.transform(1, 0, 0, 1, centerX, centerY);
+            // ctx.transform(2, 0, 0, 2, 0, 0);     
+            // 接下来从中心点回归到左上角开始绘制  
+            // ctx.transform(1, 0, 0, 1, -centerX, -centerY);
+
+            // 将上面三个变换合成为一个
+            // 因此这个矩阵就是按照坐标中心点缩放 2x 的矩阵, 以后都可以这么用
+            // 这里 -centerX 是因为  -centerX * zoom + centerX  恰好形成  -centerX
+            // 如果缩放倍数不是 2x 就会是别的值了
+            ctx.transform(2, 0, 0, 2, -centerX, -centerY);
+
+            // 绘制放大后的矩形
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
+
+            // 重置变换状态
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
+
+    </script>
+
+    <script>
+        function multiplyTransforms(transforms) {
+            // 初始矩阵为单位矩阵
+            let a = 1;
+            let b = 0;
+            let c = 0;
+            let d = 1;
+            let e = 0;
+            let f = 0;
+
+            // 遍历每个变换并累乘
+            for (const [aTransform, bTransform, cTransform, dTransform, eTransform, fTransform] of transforms) {
+                // 计算新的缩放和倾斜因子
+                const newA = a * aTransform + b * cTransform;
+                const newB = a * bTransform + b * dTransform;
+                const newC = c * aTransform + d * cTransform;
+                const newD = c * bTransform + d * dTransform;
+
+                // 计算新的位移
+                const newE = a * eTransform + b * fTransform + e;
+                const newF = c * eTransform + d * fTransform + f;
+
+                // 更新矩阵的缩放、倾斜和位移参数
+                a = newA;
+                b = newB;
+                c = newC;
+                d = newD;
+                e = newE;
+                f = newF;
+            }
+
+            // 返回合并后的变换矩阵的参数
+            return [a, b, c, d, e, f];
+        }
+
+        const centerX = 100;
+        const centerY = 75;
+        const first = [1, 0, 0, 1, centerX, centerY]; // 平移至中心
+        const second = [2.4, 0, 0, 2.4, 0, 0]; // 缩放两倍
+        const third = [1, 0, 0, 1, -centerX, -centerY]; // 平移回原点
+
+        const transforms = multiplyTransforms([first, second, third]);
+        console.log(transforms); // 结果是  [2, 0, 0, 2, -100, -75]
+    </script>
+    <script>
+        const zoomstep = 0.05;
+        const init = () => {
+            function getRandomColdColor() {
+                // 冷色调的色相大约在200到360度之间
+                const hue = Math.random() * 160 + 200;
+                // 较高的饱和度和亮度
+                const saturation = 50 + Math.random() * 50;
+                const lightness = 30 + Math.random() * 40;
+
+                return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            }
+            globalThis.color = (new Array(8 * 8).fill(0).map(i => {
+                return getRandomColdColor();
+            }));
+        }
+
+
+        const rect = canvas.getBoundingClientRect();
+        let zoom = 1;
+        let mousePoint = { x: 0, y: 0 };
+        let rafId = 0;
+        const zoomFrame = () => {
+            if (zoom >= 2) {
+                cancelAnimationFrame(rafId);
+                return;
+            }
+            zoom = Math.min(zoom + zoomstep, 2);
+            console.log('zoom zoom', zoom)
+
+            zoomAndDraw(zoom, mousePoint.x, mousePoint.y);
+            rafId = requestAnimationFrame(zoomFrame)
+        }
+        const shrinkFrame = () => {
+            if (zoom <= 1) {
+                cancelAnimationFrame(rafId);
+                return;
+            }
+            zoom = Math.max(1, zoom - zoomstep);
+            zoomAndDraw(zoom, mousePoint.x, mousePoint.y);
+            console.log('shrink zoom', zoom)
+            rafId = requestAnimationFrame(shrinkFrame)
+        }
+        canvas.addEventListener('pointerdown', e => {
+            const x = event.clientX - rect.left; // 减去Canvas左上角相对于视口左上角的x坐标
+            const y = event.clientY - rect.top;  // 减去Canvas左上角相对于视口左上角的y坐标
+            mousePoint.x = x;
+            mousePoint.y = y;
+            // 绘制一个点表示点击位置（可选）
+            // ctx.fillStyle = 'red';
+            // ctx.fillRect(x, y, 2, 2);
+            zoomFrame();
+        });
+
+        canvas.addEventListener('pointerup', e => {
+            cancelAnimationFrame(rafId);
+            shrinkFrame();
+        })
+
+        const zoomAndDraw = (zoom, x, y) => {
+            ctx.setTransform(zoom, 0, 0, zoom, -x * (zoom - 1), -y * (zoom - 1));
+            draw();
+        }
+
+        const draw = () => {
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.clearRect(0, 0, myCanvas.width, myCanvas.height);
+            ctx.restore();
+
+            function drawRandomColorSquare(x, y, idx) {
+                const color = globalThis.color[idx];
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, 50, 50);
+            }
+
+            // 绘制8个随机颜色的色块
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    drawRandomColorSquare(i * 50, j * 50, i * 8 + j);
+                }
+            }
+            // 重置变换状态
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+        }
+
+
+
+
+        init();
+        draw();
+    </script>
+</body>
+
+</html>

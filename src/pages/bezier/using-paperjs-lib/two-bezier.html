@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        canvas {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+        }
+    </style>
+    <script src="/public/paper-full.js"></script>
+</head>
+<body>
+    <canvas id="myCanvas"></canvas>
+    <script>
+
+
+    paper.install(window);
+    window.onload = function () {
+        paper.setup('myCanvas');
+
+        // Define the start and end points of the curve
+        var startPoint = new Point(100, 150);
+        var midPoint0 = new Point(250, 150);
+        var endPoint = new Point(400, 150);
+
+        // Define the control points
+        var controlPoint1 = new Point(150, 50);
+        var controlPoint2 = new Point(350, 50);
+        var controlPoint3 = new Point(250, 250);
+        var controlPoint4 = new Point(450, 250);
+
+        var handleLine1 = new paper.Path({
+            segments: [startPoint, controlPoint1],
+            strokeColor: 'red',
+            dashArray: [4, 4]
+        });
+        var handleLine2 = new paper.Path({
+            segments: [midPoint0, controlPoint2],
+            strokeColor: 'red',
+            dashArray: [4, 4]
+        });
+        var handleLine3 = new paper.Path({
+            segments: [midPoint0, controlPoint3],
+            strokeColor: 'red',
+            dashArray: [4, 4]
+        })
+        var handleLine4 = new paper.Path({
+            segments: [endPoint, controlPoint4],
+            strokeColor: 'red',
+            dashArray: [4, 4]
+        });        
+       
+        // Create path for the bezier curve
+        var bezierPath = new Path({
+            segments: [startPoint, midPoint0, endPoint],
+            // segments: [startPoint, controlPoint1, controlPoint2, endPoint],
+            strokeColor: 'black'
+        });
+
+        // Set the control handles for the curve
+        // 初始化贝塞尔曲线
+        // paperjs 中 bezier 不是直接传入起点终点和控制点,  而是通过控制点和起点/终点的向量来表达
+        bezierPath.segments[0].handleOut = controlPoint1.subtract(startPoint);
+        bezierPath.segments[1].handleIn = controlPoint2.subtract(midPoint0);
+        bezierPath.segments[1].handleOut = controlPoint3.subtract(midPoint0);
+        bezierPath.segments[2].handleIn = controlPoint4.subtract(endPoint);        
+
+        // Create draggable handles for the control points
+        function createHandle(point, handleLine, color) {
+            var handle = new Path.Circle({
+                center: point,
+                radius: 8,
+                fillColor: color || 'red'
+            });
+            handle.draggable = true;
+            handle.on('mousedrag', function (event) {
+                handle.position = handle.position.add(event.delta);
+                // controlPoint1.position = handle.position;
+                handleLine && (handleLine.segments[1].point = handle.position);
+                updateCurve();
+            });
+            return handle;
+        }
+        var handleForControl1 = createHandle(controlPoint1, handleLine1);
+        var handleForControl2 = createHandle(controlPoint2, handleLine2);
+        var handleForControl3 = createHandle(controlPoint3, handleLine3);
+        var handleForControl4 = createHandle(controlPoint4, handleLine4);
+
+        function createEndPoint(point, handleLines, color) {
+            var handle = new Path.Circle({
+                center: point,
+                radius: 8,
+                fillColor: color || 'red'
+            });
+            handle.draggable = true;
+            handle.on('mousedrag', function (event) {
+                handle.position = handle.position.add(event.delta);
+                // controlPoint1.position = handle.position;
+                for (const handleLine of handleLines) {
+                    handleLine && (handleLine.segments[0].point = handle.position);                    
+                }
+                updateCurve();
+            });
+            return handle;
+        }        
+
+        var handleForStartPoint = createEndPoint(startPoint, [handleLine1], 'blue');
+        var handleForMidPoint1 = createEndPoint(midPoint0, [handleLine2, handleLine3], 'blue');
+        var handleForEndPoint = createEndPoint(endPoint, [handleLine4], 'blue');
+        // Function to update the bezier curve based on handles' positions
+        function updateCurve() {
+            const lastSegIdx = bezierPath.segments.length - 1;
+            // 更新 startPoint 位置
+            bezierPath.segments[0].point = handleForStartPoint.position;            
+            // 更新 endPoint 位置
+            bezierPath.segments[lastSegIdx].point = handleForEndPoint.position;            
+            // 更新中点位置
+            bezierPath.segments[1].point = handleForMidPoint1.position;            
+
+            // 更新第一个控制点位置
+            bezierPath.segments[0].handleOut = handleForControl1.position.subtract(bezierPath.segments[0].point);
+            // 更新第二个控制点位置
+            bezierPath.segments[1].handleIn = handleForControl2.position.subtract(bezierPath.segments[1].point);
+            // 更新第2段第一个控制点位置
+            bezierPath.segments[1].handleOut = handleForControl3.position.subtract(bezierPath.segments[1].point);            
+            // 更新最后一个控制点位置
+            bezierPath.segments[lastSegIdx].handleIn = handleForControl4.position.subtract(bezierPath.segments[lastSegIdx].point);            
+
+            
+        }
+
+        // Initial update of the curve
+        updateCurve();
+    }
+    </script>
+</body>
+</html>

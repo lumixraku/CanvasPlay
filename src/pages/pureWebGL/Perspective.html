@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    html,
+    body,
+    canvas {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    p {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="cnv" width="800" height="600"></canvas>
+
+  <p>Created by Jérémy Heleine for <a href="https://codepen.io/SitePoint/pen/VeEyvm">CodePen</a></p>
+
+  https://juejin.im/entry/5aac7d90518825556918c0b7
+  <script>
+
+    // 使用的坐标系是 右手坐标系
+    // 且屏幕右侧是 x 轴正方向
+    // 人眼看屏幕时候  人眼所在是 z 轴正方向  屏幕背后是 z 轴负方向
+
+
+    var Vertex = function (x, y, z) {
+      this.x = parseFloat(x);
+      this.y = parseFloat(y);
+      this.z = parseFloat(z);
+    };
+
+    var Vertex2D = function (x, y) {
+      this.x = parseFloat(x);
+      this.y = parseFloat(y);
+    };
+
+    var Cube = function (center, side) {
+      // Generate the vertices
+      var d = side / 2;   // side = half height
+      console.log("size", side)
+
+      this.vertices = [
+
+        // 0 近面
+        new Vertex(center.x - d, center.y - d, center.z + d),
+
+        // 1
+        new Vertex(center.x - d, center.y - d, center.z - d),
+
+        // 2
+        new Vertex(center.x + d, center.y - d, center.z - d),
+
+        // 3 近面
+        new Vertex(center.x + d, center.y - d, center.z + d),
+
+        // 4 近面
+        new Vertex(center.x + d, center.y + d, center.z + d),
+
+        // 5
+        new Vertex(center.x + d, center.y + d, center.z - d),
+
+        // 6
+        new Vertex(center.x - d, center.y + d, center.z - d),
+
+        // 7 近面
+        new Vertex(center.x - d, center.y + d, center.z + d)
+      ];
+
+      // Generate the faces
+      this.faces = [
+        // 底面
+        [this.vertices[0], this.vertices[1], this.vertices[2], this.vertices[3]],
+
+        // 右边侧面
+        [this.vertices[3], this.vertices[2], this.vertices[5], this.vertices[4]],
+
+        // 顶面
+        [this.vertices[4], this.vertices[5], this.vertices[6], this.vertices[7]],
+
+        // 左边侧面
+        [this.vertices[7], this.vertices[6], this.vertices[1], this.vertices[0]],
+
+        // 远面(背面)
+        [this.vertices[1], this.vertices[6], this.vertices[5], this.vertices[2]],
+
+        // 近面(正面)
+        [this.vertices[7], this.vertices[0], this.vertices[3], this.vertices[4]],
+      ];
+    };
+
+    var n = 400
+    var f = 880
+    var no = ( f - n) / 2 //近平面到原点的距离
+    function projectMatrix(M) {
+      let Mo = new Vertex(M.x, M.y, M.z)
+
+
+      var r = 0
+      var z = 0
+      z = n + no - M.z // 右手坐标系, 近面的 z 值更大 所以用减去
+      console.log("z",   M.z,   z,  n/z)
+
+
+      Mo.x = n / z * Mo.x
+      Mo.y = n / z * Mo.y
+      Mo.z = (n + f)  - n * f/ z
+      return Mo
+
+    }
+
+    function project(M) {
+
+      var fh = 400
+      var nh = 50
+
+      // Distance between the camera and the near plane
+      var n = 600; // 视点到近平面的距离
+
+      var r = n / (n - M.z); // scale  // 右手坐标系, 近面的 z 值更大 所以用减去
+      // r = (d - M.z) / 800
+
+
+
+      return new Vertex2D(r * M.x, r * M.y);
+    }
+
+    function render(objects, ctx, dx, dy) {
+      // Clear the previous frame
+      ctx.clearRect(0, 0, 2 * dx, 2 * dy);
+
+      // For each object
+      for (var i = 0, n_obj = objects.length; i < n_obj; ++i) {
+        // For each face
+        for (var j = 0, n_faces = objects[i].faces.length; j < n_faces; ++j) {
+          // Current face
+          var face = objects[i].faces[j];
+
+
+
+          if (j == 5) {
+            ctx.strokeStyle = 'rgb(0, 0, 0)';
+            ctx.fillStyle = "rgba(255, 255, 0, 0.5)";
+          } else {
+            ctx.strokeStyle = 'rgb(0, 0, 0)';
+            ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
+          }
+          // Draw the first vertex
+          var P = projectMatrix(face[0]);
+          ctx.beginPath();
+          ctx.moveTo(P.x + dx, -P.y + dy);
+
+          // Draw the other vertices
+          for (var k = 1, n_vertices = face.length; k < n_vertices; ++k) {
+            P = projectMatrix(face[k]);
+            ctx.lineTo(P.x + dx, -P.y + dy);
+          }
+
+          // Close the path and draw the face
+          ctx.closePath();
+          ctx.stroke();
+          ctx.fill();
+        }
+      }
+    }
+
+    (function () {
+      // Fix the canvas width and height
+      var canvas = document.getElementById('cnv');
+      canvas.width = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+      var dx = canvas.width / 2;
+      var dy = canvas.height / 2;
+
+      // Objects style
+      var ctx = canvas.getContext('2d');
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillStyle = 'rgba(0, 150, 255, 0.3)';
+
+      // Create the cube
+      var cube_center = new Vertex(0, 0, 0);
+      var cube = new Cube(cube_center, dy);
+      var objects = [cube];
+
+      // First render
+      render(objects, ctx, dx, dy);
+
+      // Events
+      var mousedown = false;
+      var mx = 0;
+      var my = 0;
+
+      canvas.addEventListener('mousedown', initMove);
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', stopMove);
+
+      // Rotate a vertice
+      function rotate(M, center, theta, phi) {
+        phi = -phi
+        theta = - theta
+        // Rotation matrix coefficients
+        var ct = Math.cos(theta);
+        var st = Math.sin(theta);
+        var cp = Math.cos(phi);
+        var sp = Math.sin(phi);
+
+        // Rotation
+        var x = M.x - center.x;
+        var y = M.y - center.y;
+        var z = M.z - center.z;
+
+        // 以下是根据先 绕 X 轴旋转, 再绕 Z 轴旋转得到 (右手坐标系)
+        // M.x = ct * x - st * cp * y + st * sp * z + center.x;
+        // M.y = st * x + ct * cp * y - ct * sp * z + center.y;
+        // M.z = sp * y + cp * z + center.z;
+
+
+        // 下面是根据先 绕 X 轴, 再绕 Y 轴旋转得到.
+        M.x = ct * x - st * cp * z + st * sp * y + center.x;
+        M.y = sp * z + cp * y + center.y;
+        M.z = st * x + ct * cp * z - ct * sp * y + center.z;
+      }
+
+      // Initialize the movement
+      function initMove(evt) {
+        clearTimeout(autorotate_timeout);
+        mousedown = true;
+        mx = evt.clientX;
+        my = evt.clientY;
+      }
+
+      function move(evt) {
+        if (mousedown) {
+          var theta = (evt.clientX - mx) * Math.PI / 360;
+          var phi = (evt.clientY - my) * Math.PI / 180;
+
+          for (var i = 0; i < 8; ++i)
+            rotate(cube.vertices[i], cube_center, theta, phi);
+
+          mx = evt.clientX;
+          my = evt.clientY;
+
+          render(objects, ctx, dx, dy);
+        }
+      }
+
+      function stopMove() {
+        mousedown = false;
+        autorotate_timeout = setTimeout(autorotate, 2000);
+      }
+
+      function autorotate() {
+        // for (var i = 0; i < 8; ++i)
+        //   rotate(cube.vertices[i], cube_center, -Math.PI / 720, Math.PI / 720);
+
+        // render(objects, ctx, dx, dy);
+
+        // autorotate_timeout = setTimeout(autorotate, 30);
+      }
+      autorotate_timeout = setTimeout(autorotate, 2000);
+    })();
+
+
+  </script>
+</body>
+
+</html>
