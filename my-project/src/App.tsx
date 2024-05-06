@@ -19,7 +19,10 @@ function App() {
                         navigation.state === "loading" ? "w-1/4 loading" : loadedClassNames
                     }
                 >
+                    <div className="outlet">
+
                     <Outlet/>
+                    </div>
                 </main>
             </div>
         </div>
