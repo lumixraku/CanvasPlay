@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+body {
+  margin: 0;
+  padding: 0;
+}
+div {
+  box-sizing: border-box;
+}
+.container {
+  margin: 5vh auto;
+  width: 90vw;
+  min-width: 1100px;
+  height: 90vh;
+  display: flex;
+  gap: 20px;
+}
+.operator {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.canvas {
+  position: relative;
+  padding: 10px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 700px;
+  border: 1px solid blue;
+}
+
+.tip {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #aaa;
+  font-size: 14px;
+}
+
+/* 组件公共样式 */
+.box {
+  position: absolute;
+  cursor: pointer;
+}
+
+#canvas-container {
+  position: relative;
+  flex: 1;
+  padding: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 300px;
+  border: 1px solid red;
+}
+.stack {
+  width: 200px;
+  height: 100%;
+  border: 1px solid red;
+}
+
+h3 {
+  text-align: center;
+}
+
+.history-item {
+  font-size: 12px;
+  color: #6b6a6a;
+  margin: 10px 0;
+  padding: 0 10px;
+  width: 200px;
+  height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+    </style>
+</head>
+<body>
+    <div>
+https://juejin.cn/post/7107632694548742152?searchId=202405051542340FC13859BE05916D8EEC
+
+    </div>
+    <div>
+https://code.juejin.cn/pen/7339854508920897572
+    </div>
+    <div class="container">
+        <!-- 画布区 -->
+        <div class="canvas">
+            <div>
+                <h3>画布区</h3>
+            </div>
+            <!-- 操作区 -->
+            <div class="operator">
+                <button>添加组件！</button>
+                <button>瞬间移动！</button>
+                <button>改变形态！</button>
+                <button>改变外观！</button>
+                <button>撤回</button>
+                <button>前进</button>
+            </div>
+            <!-- 选择组件提示，后续 JS 操作控制显示内容 -->
+            <div class="tip">未选中组件</div>
+            <!-- 画布内容区 -->
+            <div id="canvas-container"></div>
+        </div>
+        <!-- 历史记录区 -->
+        <div class="stack">
+            <h3>历史记录</h3>
+            <div class="history-list"></div>
+        </div>
+    </div>
+
+    <script>
+    const HISTORYTYPE = {
+        CREATE: "CREATE",
+        MOVE: "MOVE",
+        SIZE: "SIZE",
+        COLOR: "COLOR",
+    };
+
+    // 组件公共 style
+    const initStyle = {
+        width: "100px",
+        height: "100px",
+        backgroundColor: "#f00",
+        top: "10px",
+        left: "10px",
+        zIndex: null,
+    };
+
+    // 组件公共 config
+    const publicComponentConfig = {
+        id: null,
+        dom: null,
+        style: initStyle,
+        beforeStyle: initStyle,
+    };
+
+    class HistoryStack {
+        constructor() {
+            this.backStack = [];
+            this.forwardStack = [];
+        }
+
+        pushRecord(item, type) {
+            const records = {
+                id: Date.now().toString(),
+                historyType: type,
+                historyData: JSON.parse(JSON.stringify(item)),
+            };
+            this.backStack.push(records);
+            this.forwardStack = [];
+        }
+
+        backAction() {
+            if (!this.backStack.length) {
+                alert("无后退操作记录！");
+                return;
+            }
+            const historyItem = this.backStack.pop();
+            this.forwardStack.push(historyItem);
+            return historyItem;
+        }
+
+        forwardAction() {
+            if (!this.forwardStack.length) {
+                alert("无前进操作记录！");
+                return;
+            }
+            const historyItem = this.forwardStack.pop();
+            this.backStack.push(historyItem);
+            return historyItem;
+        }
+    }
+
+    class LowCodeCanvas {
+        constructor() {
+            this.state = {
+                canvasWidth: 0,
+                canvasHeight: 0,
+                componentList: [],
+                currentSelect: new Proxy(
+                    { value: null },
+                    {
+                        get(target, key) {
+                            return target[key];
+                        },
+                        set: (target, key, value) => {
+                            this.Otip.innerHTML = value ? `已选中组件id：${value}` : `未选中组件`;
+                            target[key] = value;
+                            return true;
+                        },
+                    }
+                ),
+            };
+
+            this.historyStack = new HistoryStack();
+            this.OCanvasContainer = document.querySelector("#canvas-container");
+            this.Otip = document.querySelector(".tip");
+            this.OHistoryList = document.querySelector(".history-list");
+            this.Ooperators = document.querySelector(".operator");
+            const buttons = this.Ooperators.children;
+            this.OAddButton = buttons[0];
+            this.OMoveButton = buttons[1];
+            this.OSizeButton = buttons[2];
+            this.OColorButton = buttons[3];
+            this.OBackButton = buttons[4];
+            this.OForwardButton = buttons[5];
+        }
+
+        init() {
+            this.state.canvasWidth = this.OCanvasContainer.clientWidth;
+            this.state.canvasHeight = this.OCanvasContainer.clientHeight;
+            this.bindEvent();
+        }
+
+        bindEvent() {
+            this.OAddButton.addEventListener("click", this.handleCreateComponent.bind(this));
+            this.OMoveButton.addEventListener("click", this.handleRandomMoveComponent.bind(this));
+            this.OSizeButton.addEventListener("click", this.handleRandomSizeComponent.bind(this));
+            this.OColorButton.addEventListener("click", this.handleRandomColorComponent.bind(this));
+            this.OBackButton.addEventListener("click", this.handleOperator.bind(this, "back"));
+            this.OForwardButton.addEventListener("click", this.handleOperator.bind(this, "forward"));
+            this.Ooperators.addEventListener("click", this.handleRenderHistory.bind(this));
+        }
+
+        handleOperator(type) {
+            const historyItem = type === "back" ? this.historyStack.backAction() : this.historyStack.forwardAction();
+            if (!historyItem) return;
+
+            const isCreate = historyItem.historyType === HISTORYTYPE.CREATE;
+
+            if (isCreate && type === "back") {
+                this.removeComponent(historyItem.historyData);
+                return;
+            }
+            if (isCreate && type === "forward") {
+                this.addComponent(historyItem.historyData);
+                return;
+            }
+
+            if (type === "back") {
+                this.backComponentStyle(historyItem.historyData, historyItem.historyType);
+                return;
+            }
+
+            if (type === "forward") {
+                this.forwardComponentStyle(historyItem.historyData);
+                return;
+            }
+        }
+
+        handleRenderHistory() {
+            const list = this.historyStack.backStack;
+            this.OHistoryList.innerHTML = list
+                .map((i) => `<div class="history-item">${i.historyType} 操作 - 组件id: ${i.historyData.id}</div>`)
+                .join("");
+        }
+
+        handleCreateComponent() {
+            const div = document.createElement("div");
+            const config = JSON.parse(JSON.stringify(publicComponentConfig));
+            config.style.zIndex = this.state.componentList.length;
+            config.id = Date.now().toString();
+            config.dom = div;
+            div.id = config.id;
+            div.classList.add("box");
+            div.addEventListener("click", this.handleSelectComponent.bind(this, div.id));
+            this.setComponentStyle(div, config.style);
+            this.state.componentList.push(config);
+            this.OCanvasContainer.appendChild(div);
+            this.historyStack.pushRecord(config, HISTORYTYPE.CREATE);
+        }
+
+        handleRandomMoveComponent() {
+            if (!this.state.currentSelect.value) {
+                alert("未选中组件！");
+                return;
+            }
+            const { componentList, canvasHeight, canvasWidth } = this.state;
+            const item = componentList.find((item) => item.id === this.state.currentSelect.value);
+            item.beforeStyle = { ...item.style };
+            const rect = item.dom.getBoundingClientRect();
+            item.style.top = `${this.getRandomNumber(0, canvasHeight - rect.height)}px`;
+            item.style.left = `${this.getRandomNumber(0, canvasWidth - rect.width)}px`;
+            this.setComponentStyle(item.dom, item.style);
+            this.historyStack.pushRecord(item, HISTORYTYPE.MOVE);
+        }
+
+        handleRandomSizeComponent() {
+            if (!this.state.currentSelect.value) {
+                alert("未选中组件！");
+                return;
+            }
+            const { componentList } = this.state;
+            const item = componentList.find((item) => item.id === this.state.currentSelect.value);
+            item.beforeStyle = { ...item.style };
+            item.style.width = `${this.getRandomNumber(50, 250)}px`;
+            item.style.height = `${this.getRandomNumber(50, 250)}px`;
+            this.setComponentStyle(item.dom, item.style);
+            this.historyStack.pushRecord(item, HISTORYTYPE.SIZE);
+        }
+
+        handleRandomColorComponent() {
+            if (!this.state.currentSelect.value) {
+                alert("未选中组件！");
+                return;
+            }
+            const { componentList } = this.state;
+            const item = componentList.find((item) => item.id === this.state.currentSelect.value);
+            item.beforeStyle = { ...item.style };
+            item.style.backgroundColor = this.getRandomHexColor();
+            this.setComponentStyle(item.dom, item.style);
+            this.historyStack.pushRecord(item, HISTORYTYPE.COLOR);
+        }
+
+        handleSelectComponent(id) {
+            this.state.currentSelect.value = id;
+        }
+
+        forwardComponentStyle(item) {
+            const component = this.state.componentList.find((i) => i.id === item.id);
+            component.style = { ...item.style };
+            this.setComponentStyle(component.dom, item.style);
+        }
+
+        backComponentStyle(item, historyType) {
+            const component = this.state.componentList.find((i) => i.id === item.id);
+            const newStyle = { ...item.style };
+            switch (historyType) {
+                case HISTORYTYPE.MOVE:
+                    newStyle.left = item.beforeStyle.left;
+                    newStyle.top = item.beforeStyle.top;
+                    break;
+                case HISTORYTYPE.SIZE:
+                    newStyle.width = item.beforeStyle.width;
+                    newStyle.height = item.beforeStyle.height;
+                    break;
+                case HISTORYTYPE.COLOR:
+                    newStyle.backgroundColor = item.beforeStyle.backgroundColor;
+                    break;
+            }
+            component.style = newStyle;
+            this.setComponentStyle(component.dom, newStyle);
+        }
+
+        addComponent(item) {
+            const div = document.createElement("div");
+            const config = item;
+            config.dom = div;
+            div.id = config.id;
+            div.classList.add("box");
+            div.addEventListener("click", this.handleSelectComponent.bind(this, div.id));
+            this.setComponentStyle(div, config.style);
+            this.state.componentList.push(config);
+            this.OCanvasContainer.appendChild(div);
+        }
+
+        removeComponent(item) {
+            const dom = this.state.componentList.find((i) => i.id === item.id).dom;
+            this.state.componentList = this.state.componentList.filter((i) => i.id !== item.id);
+            this.OCanvasContainer.removeChild(dom);
+        }
+
+        setComponentStyle(dom, style) {
+            for (const key in style) {
+                dom.style[key] = style[key];
+            }
+        }
+
+        getRandomNumber(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        getRandomHexColor() {
+            let color = "#";
+            for (let i = 0; i < 6; i++) {
+                color += Math.floor(Math.random() * 16).toString(16);
+            }
+            return color;
+        }
+    }
+
+    const lowCode = new LowCodeCanvas();
+    lowCode.init();
+
+    </script>
+</body>
+</html>
