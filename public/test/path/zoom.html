@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <canvas id="myCanvas" tabindex="1" width="1830" height="1610" style="width: 915px; height: 805px;;"></canvas>
+<script>
+// 获取canvas元素
+var canvas = document.getElementById('myCanvas');
+var ctx = canvas.getContext('2d');
+const x = 50;
+const y = 50;
+const w = 1900;
+const h = 50;
+ctx.imageSmoothingEnabled = false;
+ctx.globalCompositeOperation = 'destination-out'
+// 设置scale为2.4
+ctx.scale(2.4, 2.4);
+ctx.translate(-50, 52)
+// 绘制一个矩形，填充为红色
+ctx.fillStyle = 'red';
+ctx.fillRect(x, y, w, h);
+
+// 在红色矩形上绘制一个白色矩形
+ctx.fillStyle = 'white';
+ctx.fillRect(x, y, w, h);
+</script>
+</body>
+</html>
