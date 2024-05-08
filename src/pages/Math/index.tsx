@@ -17,10 +17,10 @@ export const Menu: FC<MenuProps> = (props: { parentId: string; }) => {
         <div className="flex border-b">
             {
                 subMenu?.children?.map((route) => (
-                    <a href="#"
-                        className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 focus:outline-none transition duration-150 ease-in-out"
+                    <div className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 focus:outline-none transition duration-150 ease-in-out"
                         key={route.id}
-                    ><NavLink to={route.path!}>{route.id}</NavLink></a>
+                    ><NavLink to={route.path!}>{route.id}</NavLink>
+                    </div>
                 ))
             }
         </div>
