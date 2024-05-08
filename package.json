@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "daisyui": "^4.10.5",
+    "pixi.js": "^8.1.1",
     "postcss": "^8.4.38",
     "postcss-loader": "^8.1.1",
     "react": "^18.3.1",
@@ -20,6 +21,7 @@
     "@rsbuild/core": "^0.6.10",
     "@rsbuild/plugin-react": "^0.6.10",
     "@types/node": "^20.12.8",
+    "@types/pixi.js": "^5.0.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
     "typescript": "^5.4.2"

@@ -10,6 +10,7 @@ export const PointInPolygon: FC = () => {
         const canvas = canvasRef.current! as HTMLCanvasElement;
         const ctx = canvas.getContext('2d')!;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         // 绘制多边形
         function drawPolygon(points: number[][]) {
@@ -60,9 +61,9 @@ export const PointInPolygon: FC = () => {
         }
 
         // 绘制多边形
-        const polygonPoints = [[[100, 100], [200, 50], [300, 100], [250, 200], [150, 200]],
+        const polygonPoints = [
+        [[100, 100], [200, 50], [300, 100], [250, 200], [150, 200]],
         [[100, 100], [200, 130], [300, 100], [250, 200], [150, 200]],
-
         ];
 
         // 待判断的点
