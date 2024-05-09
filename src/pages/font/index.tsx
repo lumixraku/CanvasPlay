@@ -26,14 +26,14 @@ export const Menu: FC<MenuProps> = (props: { parentId: string; }) => {
         </div>
     );
 };
-export const MathScene: FC = () => {
+export const FontScene: FC = () => {
     const navigation = useNavigation();
 
     const loadedClassNames = "flex-1 flex flex-col overflow-hidden";
 
     return <>
-        <h2>Math Scene</h2>
-        <Menu parentId="math"></Menu>
+        <h2>Font Scene</h2>
+        <Menu parentId="font"></Menu>
         <div
             className="flex-1 flex flex-row"
         >
@@ -50,3 +50,4 @@ export const MathScene: FC = () => {
         </div>
     </>;
 };
+

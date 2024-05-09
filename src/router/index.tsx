@@ -10,6 +10,8 @@ import { PointInPolygon } from '../pages/Math/point-in-polygon';
 import { ShortestPoint } from '../pages/Math/shortest-point';
 import { RotationWithMatrix } from '../pages/Math/rotation';
 import { DetectPointInRectByMatrix } from '../pages/Math/detect-point-in-rect-by-matrix';
+import { FontShapePathByOpentype } from '../pages/font/opentype-font-path';
+import { FontScene } from '../pages/font';
 type HashRouter = ReturnType<typeof createHashRouter>;
 
 export const router: HashRouter = createHashRouter([
@@ -24,9 +26,21 @@ export const router: HashRouter = createHashRouter([
                 id: "Plum"
             },
             {
+                path: "/font",
+                element: <FontScene />,
+                id: "font",
+                children: [
+                    {
+                        path: "fontShapePathByOpentype",
+                        element: <FontShapePathByOpentype />,
+                        id: "fontShapePathByOpentype"
+                    },
+                ]
+            },
+            {
                 path: "/Math",
                 element: <MathScene />,
-                id: "Math",
+                id: "math",
                 children: [
                     {
                         path: "pointInPolygon",

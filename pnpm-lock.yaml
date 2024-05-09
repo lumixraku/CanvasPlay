@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@konghayao/opentype.js':
+    specifier: 2024.3.19
+    version: 2024.3.19
   daisyui:
     specifier: ^4.10.5
     version: 4.10.5(postcss@8.4.38)
@@ -43,6 +46,9 @@ devDependencies:
   '@types/node':
     specifier: ^20.12.8
     version: 20.12.8
+  '@types/opentype.js':
+    specifier: ^1.3.8
+    version: 1.3.8
   '@types/pixi.js':
     specifier: ^5.0.0
     version: 5.0.0
@@ -126,6 +132,13 @@ packages:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
+    dev: false
+
+  /@konghayao/opentype.js@2024.3.19:
+    resolution: {integrity: sha512-BL8ymzIcpRkMZdM5/KjKuQcQi4/7ygodnd6cu8m3aipCaFWNzp2hGJG/aNLsTxUX4tfWu6kk51pKmcP1a0IpHA==}
+    hasBin: true
+    dependencies:
+      eslint-plugin-local-rules: 2.0.1
     dev: false
 
   /@module-federation/runtime-tools@0.1.6:
@@ -364,6 +377,10 @@ packages:
     resolution: {integrity: sha512-NU0rJLJnshZWdE/097cdCBbyW1h4hEg0xpovcoAQYHl8dnEyp/NAOiE45pvc+Bd1Dt+2r94v2eGFpQJ4R7g+2w==}
     dependencies:
       undici-types: 5.26.5
+    dev: true
+
+  /@types/opentype.js@1.3.8:
+    resolution: {integrity: sha512-H6qeTp03jrknklSn4bpT1/9+1xCAEIU2CnjcWPkicJy8A1SKuthanbvoHYMiv79/2W3Xn1XE4gfSJFzt2U3JSw==}
     dev: true
 
   /@types/pixi.js@5.0.0:
@@ -661,6 +678,10 @@ packages:
   /escape-string-regexp@1.0.5:
     resolution: {integrity: sha512-vbRorB5FUQWvla16U8R/qgaFIya2qGzwDrNmCZuYKrbdSUMG6I1ZCGQRefkRVhuOkIGVne7BQ35DSfo1qvJqFg==}
     engines: {node: '>=0.8.0'}
+    dev: false
+
+  /eslint-plugin-local-rules@2.0.1:
+    resolution: {integrity: sha512-AJhGd+GcI5r2dbjiGPixM8jnBl0XFxqoVbqzwKbYz+nTk+Cj5dNE3+OlhC176bl5r25KsGsIthLi1VqIW5Ga+A==}
     dev: false
 
   /eventemitter3@5.0.1:
