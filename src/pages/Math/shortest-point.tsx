@@ -89,6 +89,6 @@ export const ShortestPoint: FC = () => {
 
     return (<>
         <h2>ShortestPoint</h2>
-        <canvas ref={canvasRef} width="400" height="400" id="canvas"></canvas>
+        <canvas ref={canvasRef} id="myCanvas" width="600" height="600" style={{width: '600px', height: '600px'}}></canvas>
     </>);
 };

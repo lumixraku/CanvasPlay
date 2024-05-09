@@ -9,6 +9,7 @@ import {
 import { PointInPolygon } from '../pages/Math/point-in-polygon';
 import { ShortestPoint } from '../pages/Math/shortest-point';
 import { RotationWithMatrix } from '../pages/Math/rotation';
+import { DetectPointInRectByMatrix } from '../pages/Math/detect-point-in-rect-by-matrix';
 type HashRouter = ReturnType<typeof createHashRouter>;
 
 export const router: HashRouter = createHashRouter([
@@ -41,6 +42,11 @@ export const router: HashRouter = createHashRouter([
                         path: "rotation",
                         element: <RotationWithMatrix />,
                         id: "rotation"
+                    },
+                    {
+                        path: "pointInRotatedRect",
+                        element: <DetectPointInRectByMatrix />,
+                        id: "pointInRotatedRect"
                     },
                 ]
             }

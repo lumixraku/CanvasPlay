@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef } from 'react';
-import { DEG_TO_RAD, Graphics, Matrix, Application, autoDetectRenderer, Container, Ticker } from 'pixi.js';
+import { DEG_TO_RAD, Graphics, Matrix, autoDetectRenderer, Container, Ticker } from 'pixi.js';
 // import { matrixMultiplyFlat , convertPixiMatrixTo4x4 } from '/Math/utils.js';
 
 const rotateRectAtCenter: () => [Graphics, () => void] = () => {
@@ -32,7 +32,7 @@ const rotateRectAtCenter: () => [Graphics, () => void] = () => {
     // matrix
     //     .append(new PIXI.Matrix(1, 0, 0, 1, centerX, centerY))
     //     .append(new PIXI.Matrix().rotate(rotation))
-    //     .append(new PIXI.Matrix(1, 0, 0, 1, -centerX, -centerY))                
+    //     .append(new PIXI.Matrix(1, 0, 0, 1, -centerX, -centerY))
 
     // 将矩阵应用于图形的变换
     shape.setFromMatrix(matrix);
@@ -41,6 +41,40 @@ const rotateRectAtCenter: () => [Graphics, () => void] = () => {
   return [
     shape, rotateFn
   ];
+};
+
+const rotateAtCertainPoint: (pivot: [number, number]) => [Graphics, () => void] = (pivot) => {
+  // 创建一个矩形
+  let rect = new Graphics();
+  rect.rect(100, 100, 100, 100);
+  rect.fill(0xFFFF00);
+
+
+  // 旋转中心
+  let rotationCenterX = pivot[0];
+  let rotationCenterY = pivot[1];
+  let angle = 0;
+
+  // 旋转动画
+  const rotateFn = () => {
+    angle += DEG_TO_RAD; // 将角度转换为弧度
+
+    // 创建一个新的矩阵
+    let matrix = new Matrix();
+
+    // 平移到旋转中心
+    matrix.translate(-rotationCenterX, -rotationCenterY);
+
+    // 应用旋转
+    matrix.rotate(angle);
+
+    // 回到原来的位置
+    matrix.translate(rotationCenterX, rotationCenterY);
+
+    // 应用矩阵到矩形
+    rect.setFromMatrix(matrix);
+  };
+  return [rect, rotateFn];
 };
 export const RotationWithMatrix: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -61,12 +95,15 @@ export const RotationWithMatrix: FC = () => {
       const stage = new Container();
 
       const [shape1, fn1] = rotateRectAtCenter();
+      const [shape2, fn2] = rotateAtCertainPoint([250, 250]);
       stage.addChild(shape1);
+      stage.addChild(shape2);
 
       // 创建一个动画循环
       const ticker = Ticker.system;
       ticker.add(() => {
         fn1();
+        fn2();
 
         // 渲染舞台到 canvas
         render.render(stage);
@@ -82,7 +119,7 @@ export const RotationWithMatrix: FC = () => {
   return (
     <>
       <div>Matrix 表示旋转</div>
-      <canvas ref={canvasRef} width={600} height={600} />;
+      <canvas ref={canvasRef} id="myCanvas" width="600" height="600" style={{width: '600px', height: '600px'}}></canvas>
 
     </>);
 
