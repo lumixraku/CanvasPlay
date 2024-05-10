@@ -9,10 +9,16 @@
 
 <body>
   <canvas id="mycanvas"></canvas>
-  <script src="./bezier.js" type="module"></script>
+  <script type="importmap">
+      {
+          "imports": {
+              "bezier.js": "/public/bezierinfo/bezier.js"
+          }
+      }
+  </script>
   <script type="module">
 
-    import { Bezier } from "./bezier.js";
+    import { Bezier } from "bezier.js";
 
     const cvs = document.getElementById("mycanvas");
     const size = 650;
@@ -21,7 +27,7 @@
     let ctx = cvs.getContext("2d");
 
     // now do things. Like this:
-    const curve = new Bezier(100,25 , 10,90 , 110,100 , 150,195);
+    const curve = new Bezier(100, 25, 10, 90, 110, 100, 150, 195);
 
     const p = curve.points,
       p1 = p[0],

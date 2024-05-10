@@ -12,6 +12,8 @@ import { RotationWithMatrix } from '../pages/Math/rotation';
 import { DetectPointInRectByMatrix } from '../pages/Math/detect-point-in-rect-by-matrix';
 import { FontShapePathByOpentype } from '../pages/font/opentype-font-path';
 import { FontScene } from '../pages/font';
+import { BezierScene } from '../pages/bezier';
+import { BezierjsDemo } from '../pages/bezier/using-bezierjs-lib/bezierjs-demo';
 type HashRouter = ReturnType<typeof createHashRouter>;
 
 export const router: HashRouter = createHashRouter([
@@ -25,6 +27,18 @@ export const router: HashRouter = createHashRouter([
                 // element: <Plum/>,
                 id: "Plum"
             },
+            {
+                path: "/bezier",
+                element: <BezierScene />,
+                id: "bezier",
+                children: [
+                    {
+                        path: "bezierjsDemo",
+                        element: <BezierjsDemo />,
+                        id: "bezierjsDemo"
+                    },
+                ]
+            },            
             {
                 path: "/font",
                 element: <FontScene />,
