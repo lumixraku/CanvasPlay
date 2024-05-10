@@ -31,7 +31,7 @@
 
 
         // 加载字体文件，这里假设你有一个字体文件的URL
-        const buffer = fetch('/font/ZCOOLQingKeHuangYou-Regular.ttf').then(res => res.arrayBuffer());
+        const buffer = fetch('/public/font/ZCOOLQingKeHuangYou-Regular.ttf').then(res => res.arrayBuffer());
         const font = opentype.parse(await buffer);
         const opentypePath = font.getPath('圣诞树Tree', 0, 0, 72)
         // 获取Canvas上下文
