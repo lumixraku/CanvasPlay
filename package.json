@@ -1,5 +1,5 @@
 {
-  "name": "my-project",
+  "name": "canvas-play",
   "private": true,
   "version": "1.0.0",
   "scripts": {
@@ -10,7 +10,9 @@
   "dependencies": {
     "@konghayao/opentype.js": "2024.3.19",
     "daisyui": "^4.10.5",
+    "marked": "^12.0.2",
     "opentype.js": "^1.3.4",
+    "paper": "^0.12.17",
     "pixi.js": "^8.1.1",
     "postcss": "^8.4.38",
     "postcss-loader": "^8.1.1",

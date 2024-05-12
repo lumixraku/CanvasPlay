@@ -15,6 +15,7 @@ export const FontShapePathByOpentype: FC = () => {
 
       // 加载字体文件，这里假设你有一个字体文件的URL
       const buffer = fetch('/font/ZCOOLQingKeHuangYou-Regular.ttf').then(res => res.arrayBuffer());
+    
       const font = opentype.parse(await buffer);
       const opentypePath = font.getPath('圣诞树Tree', 0, 0, 72);
       const pathStr = opentypePath.toPathData(1);
@@ -24,15 +25,18 @@ export const FontShapePathByOpentype: FC = () => {
       path.fromSVG(pathStr); // 官方 master 中提供 flipY 参数
 
 
-
+      ctx.clearRect(0, 0, canvasRef.current!.width, canvasRef.current!.height);  
+      // shadow
       ctx.beginPath();
+
+      ctx.save();
       ctx.translate(150, 250);
       ctx.filter = 'blur(4px)';
       ctx.fill(pathShadow);
       ctx.filter = 'none';
       ctx.closePath();
-
-      ctx.save();
+      
+      
       ctx.beginPath();
       // 使用opentype.js来处理字体，发现路径绘制时上下颠倒了，这是因为字体的坐标系统与Canvas的坐标系统不一致。
       // 在字体设计中，y坐标通常向上增长，而在Canvas API中，y坐标向下增长。

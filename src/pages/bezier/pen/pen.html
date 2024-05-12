@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        .padding{
+            padding: 100px;
+            margin: 50px;
+        }
         canvas {
             width: 100%;
             height: 900px;
@@ -16,12 +20,14 @@
 </head>
 
 <body>
-    <canvas id="myCanvas"></canvas>    
+    <div class="padding">
+        <canvas id="myCanvas"></canvas>    
+    </div>
     <script type="module">
         import { existsSamePoint } from './util.mjs';
         paper.setup('myCanvas');
 
-        const recKeyPoints = [];
+        globalThis.recKeyPoints = [];
         globalThis.startPoint = null; // 记录点击位置的起点
         globalThis.endPoint = null;
 
@@ -83,7 +89,7 @@
                 let rawPoint = new paper.Point(event.point.x, event.point.y);
                 let point = rawPoint;
 
-                let filteredArray = recKeyPoints.slice(0, recKeyPoints.length - 1);
+                let filteredArray = globalThis.recKeyPoints.slice(0, globalThis.recKeyPoints.length - 1);
                 let { exists, neareastPoint } = existsSamePoint(filteredArray, point);
 
                 // end of curr line
@@ -218,7 +224,7 @@
 
                 currLine.add(point);
                 const pointIdx = Math.max(0, currLine.segments.length - 1);
-                recKeyPoints.push(point);
+                globalThis.recKeyPoints.push(point);
 
                 let pointShape;
                 // if (!isSamePoint) {

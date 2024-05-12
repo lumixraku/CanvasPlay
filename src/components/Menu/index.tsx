@@ -6,7 +6,7 @@ export const Menu: FC = () => {
     const {routes} = router;
 
     return (
-        <nav className="max-h-screen w-80 overflow-y-auto">
+        <nav className="max-h-screen w-40 overflow-y-auto">
             <ul className="menu">
                 {
                     routes?.[0]?.children?.map((route) => (

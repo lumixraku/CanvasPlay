@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["DOM", "ES2020"],
+    "lib": [
+      "DOM",
+      "ES2020"
+    ],
     "module": "ESNext",
     "jsx": "react-jsx",
     "strict": true,
@@ -13,6 +16,10 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "checkJs": true    
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

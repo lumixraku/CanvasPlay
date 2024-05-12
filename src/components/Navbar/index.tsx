@@ -8,7 +8,7 @@ export const Navbar: FC = () => {
     return (
         <div className="navbar sticky top-0 z-30 bg-opacity-90 backdrop-blur shadow-sm">
             <div className="flex-1">
-                <a href="/" className="btn btn-ghost text-xl">animation-instance</a>
+                <a href="/" className="btn btn-ghost text-xl">Canvas play</a>
             </div>
             <div className="flex-none">
                 <ul className="menu menu-horizontal">
