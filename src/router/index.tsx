@@ -7,7 +7,7 @@ import {
     MathScene,
 } from "../pages";
 import { PointInPolygon } from '../pages/Math/point-in-polygon';
-import { ShortestPoint } from '../pages/Math/shortest-point';
+import { ShortestPoint } from '../pages/Math/nearest-point-in-line';
 import { RotationWithMatrix } from '../pages/Math/rotation';
 import { DetectPointInRectByMatrix } from '../pages/Math/detect-point-in-rect-by-matrix';
 import { FontShapePathByOpentype } from '../pages/font/opentype-font-path';

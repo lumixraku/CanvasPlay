@@ -3,10 +3,10 @@ type Point = { x: number, y: number };
 type Vector2D = [number, number];
 function pointToLineDistance(p:Point, p1:Point, p2:Point) {
     // 计算直线向量 P1P2
-    var vectorP1P2 = [p2.x - p1.x, p2.y - p1.y];
+    var vectorP1P2: [number, number] = [p2.x - p1.x, p2.y - p1.y];
 
     // 计算点 C 到直线上某一点的向量表示 P1C
-    var vectorP1C = [p.x - p1.x, p.y - p1.y];
+    var vectorP1C: [number, number] = [p.x - p1.x, p.y - p1.y];
 
     // 计算直线向量 P1P2 的模的平方
     var dotP1P2 = dotProduct(vectorP1P2, vectorP1P2);

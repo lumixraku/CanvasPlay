@@ -17,4 +17,7 @@ start a server at root path or `pnpm run dev`
 ![bezier1](./public/img/bezier1.jpg "bezier")
 ![bezier2](./public/img/two-bezier.jpg "bezier")
 
+## paperjs 绘制钢笔工具
+![pen](./public/img/pen.jpg "pen")
+
 
