@@ -1,5 +1,6 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
+import { pluginMdx } from '@rsbuild/plugin-mdx';
 import tailwindConfig from './src/tailwind.config.js';
 export default defineConfig({
   tools: {
@@ -11,6 +12,6 @@ export default defineConfig({
         ],
       }
     },
-  },  
-  plugins: [pluginReact()],
+  },
+  plugins: [pluginReact(), pluginMdx()],
 });

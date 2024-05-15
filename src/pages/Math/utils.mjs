@@ -7,9 +7,8 @@ function convertPixiMatrixTo4x4(pixiMatrix) {
     ];
 
     // Flatten the 2D array to a single array
-    return matrix4x4.flat();    
+    return matrix4x4.flat();
 }
-
 
 // point • matrix
 function multiplyMatrixAndPoint(matrix, point) {
@@ -116,10 +115,82 @@ function convertMatrix4x4ToCanvasTransform(m) {
     };
 }
 
+function makePolygons() {
+    // 绘制多边形
+    const polygonPoints = [
+        // 凸多边形
+        [[100, 100], [200, 50], [300, 100], [250, 200], [150, 200]],
+
+        // 凹多边形
+        [[100, 100], [200, 130], [300, 100], [250, 200], [150, 200]],
+
+        // 六角形
+        [[80, 100], [120, 100], [150, 50], [180, 100], [220, 100], [200, 150], [220, 200], [180, 200], [150, 250], [120, 200], [80, 200], [100, 150]],
+
+        // 凹形状
+        [[100, 100], [150, 100], [150, 150], [200, 150], [200, 100], [250, 100],[250, 200], [100, 200]]
+    ];
+    const transformedPolygons = [];
+
+    for (const [i, p] of polygonPoints.entries()) {
+        transformedPolygons.push({
+            points: addOffset(p, i * 150, i * 150),
+            shape: null,
+        });
+    }
+    return transformedPolygons;
+}
+
+// 绘制多边形
+function createPolygonPath(points) {
+    // ctx.beginPath();
+    // ctx.moveTo(points[0][0], points[0][1]);
+    // for (let i = 1; i < points.length; i++) {
+    //     ctx.lineTo(points[i][0], points[i][1]);
+    // }
+    // ctx.closePath();
+
+    // 创建一个空的 Path2D 对象
+    const path = new Path2D();
+
+    // 将起始点移动到第一个点的位置
+    const startPoint = points[0];
+    path.moveTo(startPoint[0], startPoint[1]);
+
+    // 通过连接线段绘制路径
+    for (let i = 1; i < points.length; i++) {
+        const point = points[i];
+        path.lineTo(points[i][0], points[i][1]);
+    }
+
+    // 可选：将路径闭合形成封闭图形
+    path.closePath();
+    return path;
+}
+
+function drawPolygon(ctx, poly) {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'black';
+    ctx.stroke(poly);
+
+}
+
+function addOffset(poly, offsetX, offsetY) {
+    return poly.map(p => [p[0] + offsetX, p[1] + offsetY]);
+}
+
+
 export {
     convertPixiMatrixTo4x4,
     multiplyMatrices,
     multiplyMatrixAndPoint,
     matrixMultiplyFlat,
-    convertMatrix4x4ToCanvasTransform
+    convertMatrix4x4ToCanvasTransform,
+
+
+    drawPolygon,
+    addOffset,
+    makePolygons,
+    createPolygonPath,
+
 }

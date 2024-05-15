@@ -11,75 +11,50 @@
 </head>
 
 <body>
-    <canvas id="myCanvas" width="800" height="800"></canvas>
-    参考
-    https://www.bilibili.com/video/BV1ce4y1j7a6/?spm_id_from=333.337.search-card.all.click&vd_source=66ae80b89912671707a9b77834e03720
-
+    <p>参考
+        https://www.bilibili.com/video/BV1ce4y1j7a6/?spm_id_from=333.337.search-card.all.click&vd_source=66ae80b89912671707a9b77834e03720
+    </p>
     <p>
         其中提到了使用矢量的方法判断, 做叉积, 但是不推荐.
         一个是计算复杂(可能存在精度丢失), 另一个是并不能完全满足 (例如凹多边形)
     </p>
-
     <p>本方法对凹多边形多样适用</p>
-    <script>
-        function makePolygons() {
-            // 绘制多边形
-            const polygons = [
-                // 凸多边形
-                [[100, 100], [200, 50], [300, 100], [250, 200], [150, 200]],
+    <canvas id="myCanvas" width="800" height="800"></canvas>
 
-                // 凹多边形
-                [[100, 100], [200, 130], [300, 100], [250, 200], [150, 200]],
+    <script type="module">
+        import { makePolygons, createPolygonPath, drawPolygon, addOffset } from "./utils.mjs";
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio;
+        canvas.style.width = canvas.width + 'px';
+        canvas.style.height = canvas.height + 'px';
+        canvas.width = canvas.width * dpr;
+        canvas.height = canvas.height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const polygons = makePolygons();
+        for (let i = 0; i < polygons.length; i++) {
+            const points = polygons[i].points;
+            const polyInPath2D = createPolygonPath(points);
+            polygons[i].shape = polyInPath2D;
+            drawPolygon(ctx, polyInPath2D);
+        }
 
-                // 六角形
-                [[80, 100], [120, 100], [150, 50], [180, 100], [220, 100], [200, 150], [220, 200], [180, 200], [150, 250], [120, 200], [80, 200], [100, 150]],
+        canvas.addEventListener('pointermove', e => {
 
-                // 凹形状
-                [[100, 100], [150, 100], [150, 150], [200, 150], [200, 100], [250, 100],[250, 200], [100, 200]]
-            ];
-            const transformedPolygons = [];
-
-            for (const [i, p] of polygons.entries()) {
-                transformedPolygons.push({
-                    points: addOffset(p, i * 150, i * 150)
-                });
+            const x = e.clientX - canvas.offsetLeft;
+            const y = e.clientY - canvas.offsetTop;
+            for (const [i, poly] of polygons.entries()) {
+                const isInside = isPointInPolygon([x, y], poly.points);
+                if (isInside) {
+                    ctx.strokeStyle = 'red';
+                    ctx.stroke(poly.shape);
+                } else {
+                    ctx.strokeStyle = 'black';
+                    ctx.stroke(poly.shape);
+                }
             }
-            return transformedPolygons;
-        }
-
-        // 绘制多边形
-        function createPolygonPath(points) {
-            // ctx.beginPath();
-            // ctx.moveTo(points[0][0], points[0][1]);
-            // for (let i = 1; i < points.length; i++) {
-            //     ctx.lineTo(points[i][0], points[i][1]);
-            // }
-            // ctx.closePath();
-
-            // 创建一个空的 Path2D 对象
-            const path = new Path2D();
-
-            // 将起始点移动到第一个点的位置
-            const startPoint = points[0];
-            path.moveTo(startPoint[0], startPoint[1]);
-
-            // 通过连接线段绘制路径
-            for (let i = 1; i < points.length; i++) {
-                const point = points[i];
-                path.lineTo(points[i][0], points[i][1]);
-            }
-
-            // 可选：将路径闭合形成封闭图形
-            path.closePath();
-            return path;
-        }
-
-        function drawPolygon(poly) {
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = 'black';
-            ctx.stroke(poly);
-
-        }
+        })
 
         // 判断点是否在多边形内部
         function isPointInPolygon(point, polygon) {
@@ -118,45 +93,7 @@
             return isInside;
         }
 
-        function addOffset(poly, offsetX, offsetY) {
-            return poly.map(p => [p[0] + offsetX, p[1] + offsetY]);
-        }
 
-
-    </script>
-    <script>
-        const canvas = document.getElementById('myCanvas');
-        const ctx = canvas.getContext('2d');
-        const dpr = window.devicePixelRatio;
-        canvas.style.width = canvas.width + 'px';
-        canvas.style.height = canvas.height + 'px';
-        canvas.width = canvas.width * dpr;
-        canvas.height = canvas.height * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        const polygons = makePolygons();
-        for (let i = 0; i < polygons.length; i++) {
-            const points = polygons[i].points;
-            const polyInPath2D = createPolygonPath(points);
-            polygons[i].shape = polyInPath2D;
-            drawPolygon(polyInPath2D);
-        }
-
-        canvas.addEventListener('pointermove', e => {
-
-            const x = e.clientX - canvas.offsetLeft;
-            const y = e.clientY - canvas.offsetTop;
-            for (const [i, poly] of polygons.entries()) {
-                const isInside = isPointInPolygon([x, y], poly.points);
-                if (isInside) {
-                    ctx.strokeStyle = 'red';
-                    ctx.stroke(poly.shape);
-                } else {
-                    ctx.strokeStyle = 'black';
-                    ctx.stroke(poly.shape);
-                }
-            }
-        })
     </script>
 </body>
 

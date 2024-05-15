@@ -17,10 +17,10 @@
     "emitDeclarationOnly": true,
     "allowImportingTsExtensions": true,
     "allowJs": true,
-    "checkJs": true    
+    "checkJs": true
   },
   "include": [
     "src/**/*.tsx",
-    "src/**/*.ts",
+    "src/**/*.ts"
   ]
 }
