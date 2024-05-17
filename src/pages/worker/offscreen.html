@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+
+  <body>
+    demo 参考
+    https://juejin.cn/post/6844904035351265293?searchId=202405171617225003C1233F7B95B59F51
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <script>
+      function init0() {
+        var worker = null,
+          canvasInWorker,
+          ctxBitmap;
+        canvasInWorker = document.getElementById("canvas");
+        var offscreen = canvasInWorker.transferControlToOffscreen();
+        var worker = new Worker("./worker0.js");
+        worker.postMessage({ msg: "init", canvas: offscreen }, [offscreen]);
+        requestAnimationFrame(redraw);
+
+        function redraw() {
+          const deadline = window.performance.now() + 16;
+          worker.postMessage({ msg: "draw", deadline });
+          requestAnimationFrame(redraw);
+        }
+      }
+
+      function init1() {
+        var canvasInWorker = document.getElementById("canvas");
+        var offscreen = canvasInWorker.transferControlToOffscreen();
+        var worker = new Worker("./worker1.js");
+        worker.postMessage({ msg: "start", canvas: offscreen }, [offscreen]);
+
+        canvasInWorker.addEventListener("click", function () {
+          worker.postMessage({ msg: "changeColor" });
+        });
+      }
+      init0();
+      // init1();
+    </script>
+  </body>
+</html>

@@ -20,6 +20,7 @@
     "checkJs": true    
   },
   "include": [
-    "src"
+    "src/**/*.tsx",
+    "src/**/*.ts",
   ]
 }
