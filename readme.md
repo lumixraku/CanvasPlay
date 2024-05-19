@@ -2,9 +2,7 @@
 
 start a server at root path or `pnpm run dev`
 
-## opentype.js 提取一串文本文字的路径并做模糊
-
-/src/pages/font/opentype-fontpath.html
+## opentype.js 文本文字路径 font/fontShapePathByOpentype
 
 ![font path](./public/img/font-path.jpg "font path")
 
@@ -17,7 +15,7 @@ start a server at root path or `pnpm run dev`
 ![bezier1](./public/img/bezier1.jpg "bezier")
 ![bezier2](./public/img/two-bezier.jpg "bezier")
 
-## paperjs 绘制钢笔工具
+## paperjs 绘制钢笔工具  bezier/pen
 ![pen](./public/img/pen.jpg "pen")
 
 

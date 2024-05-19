@@ -1,0 +1,67 @@
+<title>Shapes</title>
+
+<style>
+html,
+body {
+    margin: 0;
+    overflow: hidden;
+    height: 100%;
+}
+
+/* Scale canvas with resize attribute to full size */
+canvas[resize] {
+    width: 100%;
+    height: 100%;
+}    
+</style>
+<script type="text/javascript" src="/public/paper-full.js"></script>
+
+</head>
+
+<body>
+    <canvas id="canvas" resize></canvas>
+</body>
+<script type="text/javascript" canvas="canvas">
+    paper.setup('canvas');
+    if (window.Worker) { // Check if Browser supports the Worker API.
+        let worker = new Worker("paper-worker.js");
+
+        // Create two paths, and send them to the worker to perform a boolean
+        // operation on them.
+
+        let circle = new paper.Path.Circle({
+            center: [200, 200],
+            radius: 100,
+            fillColor: 'red'
+        });
+
+        let rectangle = new paper.Path.Rectangle({
+            point: [200, 200],
+            size: [200, 200],
+            fillColor: 'blue'
+        });
+
+        let data = [
+            circle.exportJSON(),
+            rectangle.exportJSON()
+        ];
+        console.log('Sent', data);
+        worker.postMessage(data);
+
+        // The worker sends the result back in a message, from which we can then
+        // create a new path item and siplay it.
+        worker.onmessage = function (event) {
+            let data = event.data;
+            if (data) {
+                console.log('Received', data);
+                let result = paper.project.activeLayer.importJSON(data);
+                result.fillColor = 'yellow';
+                result.fillColor.alpha = 0.5;
+                result.position = [200, 200];
+                result.fullySelected = true;
+            }
+        };
+
+    }
+</script>
+</html>
