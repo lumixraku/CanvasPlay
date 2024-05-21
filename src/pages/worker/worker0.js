@@ -17,10 +17,10 @@ function draw(e) {
     const deadline = e.data.deadline;
     if (now > deadline) {
         return;
-    }    
+    }
     ctx.clearRect(0, 0, offscreen.width, offscreen.height);
     for (var i = 0; i < 1000; i++) {
-        if (now > deadline) { 
+        if (now > deadline) {
             break;
         }
         for (var j = 0; j < 1000; j++) {
