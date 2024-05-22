@@ -8,27 +8,26 @@
 </head>
 
 <body>
-  <canvas id="myCanvas" tabindex="1" width="1830" height="1610" style="width: 915px; height: 805px;;"></canvas>
+  <canvas id="myCanvas" tabindex="1" width="1830" height="1610" style="width: 915px; height: 805px;"></canvas>
   <script>
     // 获取canvas元素
     var canvas = document.getElementById('myCanvas');
     var ctx = canvas.getContext('2d');
-    const x = 50;
-    const y = 50;
-    const w = 1900;
-    const h = 50;
-    ctx.imageSmoothingEnabled = true;
-    ctx.scale(2.2, 2.2);
-    ctx.translate(-51, 51)
-    // 绘制一个矩形，填充为红色
-    ctx.fillStyle = 'red';
-    ctx.fillRect(x, y, w, h);
+    ctx.fillRectWithZoom2 = function (x, y, width, height) {
+      const m = this.getTransform();
+      const scaleX = m.a;
+      const scaleY = m.d;
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, Math.round(m.e * scaleX), Math.round(m.f * scaleY));
+      x = Math.round(x * scaleX);
+      y = Math.round(y * scaleY);
+      const w = Math.round(width * scaleX);
+      const h = Math.round(height * scaleY);
+      this.fillRect(x, y, w, h);
+      ctx.restore();
+    }
 
-    // 在红色矩形上绘制一个白色矩形
-    ctx.fillStyle = 'white';
-    ctx.fillRect(x, y, w, h);
-
-    ctx.fillRectWithZoom = function (x, y, width, height)  {
+    ctx.fillRectWithZoom = function (x, y, width, height) {
       const m = this.getTransform();
       const scaleX = m.a;
       const scaleY = m.d;
@@ -37,7 +36,7 @@
       y = Math.round(y * scaleY) / scaleY;
       width = Math.round(width * scaleX) / scaleX;
       height = Math.round(height * scaleY) / scaleY;
-      this.fillRect(Math.floor(x), Math.floor(y), Math.ceil(width), Math.ceil(height));
+      this.fillRect(x, y, width, height);
     }
 
     ctx.translateWithZoom = function (x, y) {
@@ -50,14 +49,98 @@
     }
 
 
-    ctx.translateWithZoom(-50, 151)
-    // 绘制一个矩形，填充为红色
-    ctx.fillStyle = 'red';
-    ctx.fillRectWithZoom(x, y, w, h);
 
-    // 在红色矩形上绘制一个白色矩形
-    ctx.fillStyle = 'white';
-    ctx.fillRectWithZoom(x, y, w, h);
+    let x = 50;
+    let y = 50;
+    let w = 190;
+    let h = 50;
+
+
+
+    // problem
+    {
+      ctx.save();
+      // ctx.scale(1, 1);
+      ctx.scale(1.3, 1.3);
+      ctx.translate(51, 51) // bug
+      // 绘制一个矩形，填充为红色
+      ctx.fillStyle = 'red';
+      ctx.fillRect(x, y, w, h);
+
+      // 在红色矩形上绘制一个白色矩形
+      ctx.fillStyle = 'white';
+      ctx.fillRect(x, y, w, h);
+      ctx.restore();
+
+    }
+
+
+
+    // fix0 ok!
+    {
+      ctx.save();
+      ctx.scale(2.4, 2.4);
+      ctx.translateWithZoom(-50, 50)
+      ctx.fillStyle = 'red';
+      ctx.beginPath();
+      ctx.fillRectWithZoom(x, y, w, h);
+      ctx.fillStyle = 'white';
+      ctx.fillRectWithZoom(x, y, w, h);
+      ctx.restore();
+
+      x = 50.1;
+      y = 51.4;
+      w = 190.2;
+      h = 50.3;
+      ctx.save();
+      ctx.scale(1.32, 1.31);
+      ctx.translateWithZoom(249.1, 11.1);
+      ctx.fillStyle = 'green';
+      ctx.beginPath();
+      ctx.fillRectWithZoom(x, y, w, h);
+      ctx.fillStyle = 'white';
+      ctx.fillRectWithZoom(x, y, w, h);
+      ctx.restore();
+    }
+
+
+    // fix1  rect 是整数时 OK, 小数则不行, scale 是两位小数时 rect 是整数野不行.
+    // diff: use setTransform not scale, but failed when size has fraction
+    {
+      x = 50;
+      y = 190;
+      w = 200;
+      h = 50.6;
+      ctx.setTransform(1.3, 0, 0, 1.3, 0, 0);
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(x, y, w, h);
+
+      ctx.fillStyle = 'white';
+      ctx.fillRect(x, y, w, h);
+    }
+
+
+
+
+    // fix2 
+
+    {
+      x = 150.5;
+      y = 290.3;
+      w = 200;
+      h = 50;
+      ctx.setTransform(1.3, 0, 0, 1.3, 451, 151);
+      ctx.fillStyle = 'black';
+      ctx.fillRectWithZoom2(x, y, w, h);
+
+      ctx.fillStyle = 'white';
+      ctx.fillRectWithZoom2(x, y, w, h);
+
+    }
+
+
+
+
   </script>
 </body>
 
