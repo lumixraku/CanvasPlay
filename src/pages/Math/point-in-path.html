@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bezier Path Example</title>
+    <style>
+        .wrapper {
+            display: flex;
+            overflow: hidden;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #myCanvas {
+            margin: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <canvas id="myCanvas" width="400" height="400" style="border:1px solid #000;"></canvas>
+    </div>
+
+    <script>
+        // 获取canvas元素和绘图上下文
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        let startX = 100, startY = 350;
+        // 定义贝塞尔曲线的控制点和终点
+        const controlPoints = [
+            // 第一个角的控制点和终点
+            { cp1x: 50, cp1y: 300, x2: 100, y2: 250 },
+            // 第二个角的控制点和终点
+            { cp1x: 150, cp1y: 200, x2: 200, y2: 200 },
+            // 第三个角的控制点和终点
+            { cp1x: 300, cp1y: 250, x2: 300, y2: 300 },
+            // 第四个角的控制点和终点，以及回到起点
+            { cp1x: 250, cp1y: 350, x2: startX, y2: startY }
+        ];
+
+
+        const drawCurve = () => {
+            // 开始绘制新路径
+            ctx.beginPath();
+            // 存储起点坐标
+            ctx.moveTo(startX, startY); // 移动到当前角的起点
+
+            // 绘制四条贝塞尔曲线
+            for (let i = 0; i < controlPoints.length; i++) {
+                const { cp1x, cp1y, x2, y2 } = controlPoints[i];
+                ctx.quadraticCurveTo(cp1x, cp1y, x2, y2); // 同时将 path 的 endPoint 移动到 x2, y2
+                // 下面操作没必要
+                // startX = x2; // 更新下一个角的起点x坐标
+                // startY = y2; // 更新下一个角的起点y坐标
+                // ctx.moveTo(startX, startY); // 移动到当前角的起点
+            }
+            ctx.fill();
+            ctx.stroke();
+            // 形成封闭路径
+            ctx.closePath();
+        }
+
+
+
+        const drawCurveByPath = () => {
+            const path = new Path2D();
+            path.moveTo(startX, startY); // 移动到当前角的起点
+            // 存储起点坐标
+            // 绘制四条贝塞尔曲线形成一个封闭路径
+            for (let i = 0; i < controlPoints.length; i++) {
+                const { cp1x, cp1y, x2, y2 } = controlPoints[i];
+                path.quadraticCurveTo(cp1x, cp1y, x2, y2);
+            }
+
+            ctx.stroke(path);
+            return path;
+        }
+
+        globalThis.state = {
+            pos: { x: 0, y: 0 },
+            path: null,
+
+        }
+
+        // 描边路径
+        const drawShape = (color) => {
+            // 存储起点坐标
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = 2;
+
+            ctx.save();
+            ctx.setTransform(1, 0, 0, 1, -50, -200);
+            drawCurve();
+            ctx.restore();
+
+            const path = drawCurveByPath();
+            return path;
+        }
+
+        const update = () => {
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const path = drawShape();
+            ctx.save();
+            if(path) {
+                const {x, y} = globalThis.state.pos;
+                const inPath = ctx.isPointInPath(path, x, y, 'evenodd');
+                const color =  inPath ? 'red' : 'black';
+                ctx.fillStyle = color;
+                ctx.fill(path);
+            }
+            ctx.restore();
+
+
+            window.requestAnimationFrame(update);
+        }
+
+        window.requestAnimationFrame(update);
+
+        canvas.addEventListener('mousemove', function (event) {
+            // 获取鼠标相对于文档的位置
+            const mouseX = event.pageX;
+            const mouseY = event.pageY;
+
+            // 获取canvas相对于文档的位置
+            const canvasRect = canvas.getBoundingClientRect();
+
+            // 计算鼠标相对于canvas的位置
+            const canvasX = mouseX - canvasRect.left;
+            const canvasY = mouseY - canvasRect.top;
+
+            globalThis.state.pos.x = canvasX;
+            globalThis.state.pos.y = canvasY;
+
+            // 可以在这里使用canvasX和canvasY做进一步的处理
+            // console.log(`Mouse is at:s x=${canvasX}, y=${canvasY}`);
+
+        });
+    </script>
+
+</body>
+
+</html>
