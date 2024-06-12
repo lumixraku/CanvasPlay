@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="800" height="800"></canvas>
+  <canvas id="myCanvasMouse" width="800" height="800" style="position: absolute; top: 0; left:0; z-index: 10;pointer-events: none;"></canvas>
+  <script>
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    const myCanvasMouse = document.getElementById('myCanvasMouse');
+    const ctxMouse = myCanvasMouse.getContext('2d');
+    const dpr = window.devicePixelRatio;
+    // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+
+    // 设置 canvas 大小
+    canvas.width = 800;
+    canvas.height = 800;
+
+    function toFixed2(number) {
+      return Math.round(number * 100) / 100;
+    }
+
+    function drawTiles() {
+      // 定义色块的尺寸
+      const blockSize = 100;
+      const numBlocksX = 8;
+      const numBlocksY = 8;
+
+      // 遍历绘制每个色块
+      for (let x = 0; x < numBlocksX; x++) {
+        for (let y = 0; y < numBlocksY; y++) {
+          // 计算当前色块的起始坐标
+          const left = x * blockSize;
+          const top = y * blockSize;
+
+          // 生成一个随机的冷色色值
+          const hue = Math.floor(Math.random() * 180); // 0-180 是冷色范围
+          const saturation = 50 + Math.floor(Math.random() * 50); // 50-100 饱和度
+          const lightness = 50 + Math.floor(Math.random() * 50); // 50-100 亮度
+          const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
+          // 绘制当前色块
+          ctx.fillStyle = color;
+          ctx.fillRect(left, top, blockSize, blockSize);
+        }
+      }
+    }
+
+    // test1, use inverse matrix go back to origin transform
+    {
+      console.log('before', ctx.getTransform());
+      ctx.translate(-50, -50);
+      ctx.scale(1.3, 1.3);
+      const trans = ctx.getTransform();
+      const inverse = trans.inverse();
+      ctx.transform(toFixed2(inverse.a),
+        toFixed2(inverse.b),
+        toFixed2(inverse.c),
+        toFixed2(inverse.d),
+        toFixed2(inverse.e),
+        toFixed2(inverse.f));
+      console.log('after', ctx.getTransform());
+      drawTiles();
+    }
+
+    // 坐标系变换
+    {
+
+      ctx.scale(2, 2);
+      ctxMouse.scale(2, 2);
+      drawTiles();
+      const trans = ctx.getTransform();
+      const inverse = trans.inverse();
+      canvas.addEventListener('pointermove', e => {
+
+        const x = e.clientX - canvas.getBoundingClientRect().left;
+        const y = e.clientY - canvas.getBoundingClientRect().top;
+        // 当前坐标系（浏览器 canvas 坐标系）换算为 trans 的坐标系上的点
+        const pos = inverse.transformPoint({x, y});
+
+        ctxMouse.clearRect(0, 0, canvas.width, canvas.height);
+        ctxMouse.fillStyle = 'red';
+        ctxMouse.fillRect(pos.x -5 , pos.y -5 , 10, 10);
+      })
+
+    }
+  </script>
+</body>
+
+</html>

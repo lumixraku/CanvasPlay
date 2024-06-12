@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="400" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById('myCanvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio;
+    // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const scale = 2;
+    {
+      ctx.save();
+      // 先平移
+      ctx.translate(50, 50);
+
+      // 再缩放
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0, 0, 50, 50); // (2, 0, 0, 2, 50, 50)
+      // 获取当前的变换矩阵
+      const transform = ctx.getTransform();
+      console.log(transform);
+
+      ctx.restore();
+
+    }
+    {
+      ctx.save();
+      // 先缩放
+      ctx.scale(scale, scale);
+
+      // 再平移
+      ctx.translate(50, 50);
+
+      ctx.fillStyle = 'red';
+      ctx.fillRect(0, 0, 50, 50);
+      // 获取当前的变换矩阵
+      const transform = ctx.getTransform();
+      console.log('scale --> translate', transform);// (2, 0, 0, 2, 100, 100)
+
+      ctx.restore();
+
+    }
+
+    {
+      ctx.save();
+      ctx.transform(scale, 0, 0, scale, 50, 50)
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(0, 0, 50, 50);
+      const transform = ctx.getTransform();
+      console.log(transform);
+      ctx.restore();
+    }
+
+  </script>
+</body>
+
+</html>
