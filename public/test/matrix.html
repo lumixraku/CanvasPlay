@@ -5,11 +5,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+  <style>
+    body {
+      margin:0;
+    }
+  </style>
 </head>
 
 <body>
   <canvas id="myCanvas" width="800" height="800"></canvas>
-  <canvas id="myCanvasMouse" width="800" height="800" style="position: absolute; top: 0; left:0; z-index: 10;pointer-events: none;"></canvas>
+  <canvas id="myCanvasMouse" width="800" height="800"
+    style="position: absolute; top: 0; left:0; z-index: 10;pointer-events: none;"></canvas>
   <script type="module">
     import { DOMMatrix } from '../matrix/domMatrix.mjs';
 
@@ -29,7 +35,8 @@
       return Math.round(number * 100) / 100;
     }
 
-    function drawTiles() {
+    function drawTiles(ctx) {
+      ctx.save();
       // 定义色块的尺寸
       const blockSize = 100;
       const numBlocksX = 8;
@@ -53,9 +60,47 @@
           ctx.fillRect(left, top, blockSize, blockSize);
         }
       }
+      ctx.restore();
     }
 
-    
+    function drawRuler(ctx) {
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const step = 100;
+      const smallTickLength = 10;
+      const largeTickLength = 20;
+      const textPosY = 30;
+      const textHeight = 15;
+
+      // 绘制标尺
+      ctx.textAlign = 'center';
+      for (let i = 0; i <= canvasWidth; i += step) {
+        // 绘制长竖线
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, largeTickLength);
+        ctx.stroke();
+
+        // 绘制数字
+        if (i % step === 0) {
+          ctx.font = '12px Arial';
+          ctx.fillText(i.toString(), i, textPosY);
+        }
+
+        // 绘制短竖线
+        for (let j = 10; j < step; j += 10) {
+          ctx.beginPath();
+          ctx.moveTo(i + j, 0);
+          ctx.lineTo(i + j, smallTickLength);
+          ctx.stroke();
+
+          if (j == 50) {
+            ctx.font = '10px Arial';
+            ctx.fillText((i + 50).toString(), i + j, textPosY - 10);
+          }
+        }
+      }
+    }
 
     // test1, use inverse matrix go back to origin transform
     function inverseDemo() {
@@ -75,11 +120,15 @@
     }
 
     // 坐标系变换
-    function transformCoord(){
-
+    function transformCoord() {
+      ctx.save();
+      ctx.translate(-50, 50);
       ctx.scale(2, 2);
+      ctxMouse.translate(-50, 50);
       ctxMouse.scale(2, 2);
-      drawTiles();
+      drawTiles(ctx);
+      drawRuler(ctx);
+      ctx.restore();
       const trans = ctx.getTransform();
       const inverse = trans.inverse();
       canvas.addEventListener('pointermove', e => {
@@ -87,20 +136,23 @@
         const x = e.clientX - canvas.getBoundingClientRect().left;
         const y = e.clientY - canvas.getBoundingClientRect().top;
         // 当前坐标系（浏览器 canvas 坐标系）换算为 trans 的坐标系上的点
-        const pos = inverse.transformPoint({x, y});
+        const pos = inverse.transformPoint({ x, y });
         window.pos = pos;
         ctxMouse.clearRect(0, 0, canvas.width, canvas.height);
         ctxMouse.fillStyle = 'red';
-        ctxMouse.fillRect(pos.x -5 , pos.y -5 , 10, 10);
+        ctxMouse.fillRect(pos.x - 5, pos.y - 5, 10, 10);
       })
 
     }
 
 
     function transformCoordWith3rdPartyMatrix() {
+      ctx.translate(-50, 50);
       ctx.scale(2, 2);
+      ctxMouse.translate(-50, 50);
       ctxMouse.scale(2, 2);
-      drawTiles();
+      drawTiles(ctx);
+      drawRuler(ctx);
       const arr = ctx.getTransform().toFloat32Array();
       const trans = DOMMatrix.fromFloat32Array(arr);
       const inverse = trans.inverse();
@@ -109,11 +161,12 @@
         const x = e.clientX - canvas.getBoundingClientRect().left;
         const y = e.clientY - canvas.getBoundingClientRect().top;
         // 当前坐标系（浏览器 canvas 坐标系）换算为 trans 的坐标系上的点
-        const pos = inverse.transformPoint({ x, y, z:0, w: 0 });
+        const pos = inverse.transformPoint({ x, y, z: 0, w: 1 });
         window.pos = pos;
         ctxMouse.clearRect(0, 0, canvas.width, canvas.height);
         ctxMouse.fillStyle = 'red';
-        ctxMouse.fillRect(pos.x - 5, pos.y - 5, 10, 10);
+        ctxMouse.fillRect(pos.x - 2, pos.y - 2, 4, 4);
+        ctxMouse.fillText(`${Math.round(pos.x)}, ${Math.round(pos.y)}`, pos.x, pos.y - 10)
       })
     }
     // transformCoord();
