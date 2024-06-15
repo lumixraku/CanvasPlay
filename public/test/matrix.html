@@ -55,6 +55,8 @@
       }
     }
 
+    
+
     // test1, use inverse matrix go back to origin transform
     function inverseDemo() {
       console.log('before', ctx.getTransform());
@@ -94,7 +96,7 @@
 
     }
 
-    
+
     function transformCoordWith3rdPartyMatrix() {
       ctx.scale(2, 2);
       ctxMouse.scale(2, 2);
@@ -112,7 +114,7 @@
         ctxMouse.clearRect(0, 0, canvas.width, canvas.height);
         ctxMouse.fillStyle = 'red';
         ctxMouse.fillRect(pos.x - 5, pos.y - 5, 10, 10);
-      })      
+      })
     }
     // transformCoord();
     transformCoordWith3rdPartyMatrix();

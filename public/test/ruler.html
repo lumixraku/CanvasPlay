@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <canvas id="ruler-canvas" width="800" height="100"></canvas>
+  <script>
+const canvas = document.getElementById('ruler-canvas');
+const ctx = canvas.getContext('2d');
+
+// 设置绘制参数
+const canvasWidth = canvas.width;
+const canvasHeight = canvas.height;
+const step = 100;
+const smallTickLength = 10;
+const largeTickLength = 20;
+const textPosY = 30;
+const textHeight = 15;
+
+// 绘制标尺
+ctx.textAlign = 'center';
+for (let i = 0; i <= canvasWidth; i += step) {
+  // 绘制长竖线
+  ctx.beginPath();
+  ctx.moveTo(i, 0);
+  ctx.lineTo(i, largeTickLength);
+  ctx.stroke();
+
+  // 绘制数字
+  if (i % step === 0) {
+    ctx.font = '12px Arial';
+    ctx.fillText(i.toString(), i, textPosY);
+  }
+
+  // 绘制短竖线
+  for (let j = 10; j < step; j += 10) {
+    ctx.beginPath();
+    ctx.moveTo(i + j, 0);
+    ctx.lineTo(i + j, smallTickLength);
+    ctx.stroke();
+
+    if(j == 50) {
+      ctx.font = '10px Arial';
+      ctx.fillText( (i+ 50 ).toString(), i + j, textPosY - 10);
+    }
+  }
+}
+  </script>
+</body>
+</html>
