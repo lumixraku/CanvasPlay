@@ -296,7 +296,9 @@
         lastPos.y = curPos.y;
 
         const deltaFromPointerdown = { x: curPos.x - posWhenPointerdown.x, y: curPos.y - posWhenPointerdown.y }
-        const m = DOMMatrix.fromMatrix(transWhenPointerDown);
+        // const m = DOMMatrix.fromMatrix(transWhenPointerDown);
+        const m = DOMMatrix3rd.fromFloat32Array(transWhenPointerDown.toFloat32Array())
+
         m.e += deltaFromPointerdown.x;
         m.f += deltaFromPointerdown.y;
         ctx.setTransform(m);
@@ -307,12 +309,12 @@
         drawAll();
       }
 
-
       const dragCanvasByWheelEvent = (e) => {
         const deltaX = -e.deltaX;
         const deltaY = -e.deltaY;
         const m = ctx.getTransform();
-        const setM = DOMMatrix.fromMatrix(m);
+        // const setM = DOMMatrix.fromMatrix(m);
+        const setM = DOMMatrix3rd.fromFloat32Array(m.toFloat32Array())
         setM.e = m.e + deltaX;
         setM.f = m.f + deltaY;
         ctx.setTransform(setM);
