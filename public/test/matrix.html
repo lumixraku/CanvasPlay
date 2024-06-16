@@ -24,10 +24,11 @@
 
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
+    window.ctx = ctx;
     const myCanvasMouse = document.getElementById('myCanvasMouse');
     const ctxMouse = myCanvasMouse.getContext('2d');
     const myCanvasRuler = document.getElementById('myCanvasRuler');
-    const ctxRuler = myCanvasRuler.getContext('2d');    
+    const ctxRuler = myCanvasRuler.getContext('2d');
     // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const ctxTrans = ctx.getTransform();
 
@@ -39,6 +40,8 @@
     const numBlocksX = 8;
     const numBlocksY = 8;
     const colorMap = {}
+
+    const viewportPos = window.viewportPos = { x: -50, y: 50 } // 
 
     function toFixed2(number) {
       return Math.round(number * 100) / 100;
@@ -64,7 +67,7 @@
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.restore();
-      
+
       ctx.save();
       // 定义色块的尺寸
       const blockSize = 100;
@@ -173,7 +176,7 @@
       drawTiles(ctx);
       drawRuler(ctxRuler)
     }
-    
+
     // test1, use inverse matrix go back to origin transform
     function inverseDemo() {
       console.log('before', ctx.getTransform());
@@ -254,7 +257,7 @@
       ctxMouse.setTransform(m);
       ctxMouse.fillStyle = 'red';
       ctxMouse.fillRect(pos.x - 5, pos.y - 5, 10, 10);
-      ctxMouse.fillText(`${Math.round(pos.x)}, ${Math.round(pos.y)}`, pos.x, pos.y - 10);      
+      ctxMouse.fillText(`${Math.round(pos.x)}, ${Math.round(pos.y)}`, pos.x, pos.y - 10);
     }
 
     function bindEvent() {
@@ -263,32 +266,22 @@
       let lastPos = { x: 0, y: 0 };
       let pointerIsDown = 0;
       let delta = { x: 0, y: 0 };
-      
+
       let posWhenPointerdown = { x: 0, y: 0 };
       let transWhenPointerDown;
-      canvas.addEventListener('pointerdown', e => {
-        pointerIsDown = true;
-        const offsetX = e.clientX - canvas.getBoundingClientRect().left;
-        const offsetY = e.clientY - canvas.getBoundingClientRect().top;
-        posWhenPointerdown = { x: offsetX, y: offsetY }
 
-        transWhenPointerDown = ctx.getTransform();
-      })
 
-      // cursor pos
-      canvas.addEventListener('pointermove', e => {
-        // if(pointerIsDown) return;
+      const updateCursor = (e) => {
         const x = e.clientX - canvas.getBoundingClientRect().left;
         const y = e.clientY - canvas.getBoundingClientRect().top;
         const trans = ctx.getTransform();
-        const inverse = trans.inverse();        
+        const inverse = trans.inverse();
         const pos = inverse.transformPoint({ x, y });
         drawCursor(pos);
-      })
+      }
 
-
-      const dragCanvas = (e) => {
-        if(e.type === 'pointermove') {
+      const dragCanvasByPointerEvent = (e) => {
+        if (e.type === 'pointermove') {
           if (!pointerIsDown) return;
           pointerdownAndMoving = 1;
         }
@@ -307,19 +300,58 @@
         m.e += deltaFromPointerdown.x;
         m.f += deltaFromPointerdown.y;
         ctx.setTransform(m);
-        drawAll();        
+        viewportPos.x = m.e / m.a;
+        viewportPos.y = m.f / m.d;
+        // console.log('get translate', ctx.getTransform().e)
+
+        drawAll();
       }
-      // drag event
-      canvas.addEventListener('pointermove', e => {
-        dragCanvas(e);
-      });
+
+
+      const dragCanvasByWheelEvent = (e) => {
+        const deltaX = -e.deltaX;
+        const deltaY = -e.deltaY;
+        const m = ctx.getTransform();
+        const setM = DOMMatrix.fromMatrix(m);
+        setM.e = m.e + deltaX;
+        setM.f = m.f + deltaY;
+        ctx.setTransform(setM);
+        viewportPos.x = setM.e / setM.a;
+        viewportPos.y = setM.f / setM.d;
+        drawAll();
+
+      };
+
       const cancelMoving = () => {
         pointerIsDown = false;
         pointerdownAndMoving = 0;
       }
+
+      canvas.addEventListener('pointerdown', e => {
+        pointerIsDown = true;
+        const offsetX = e.clientX - canvas.getBoundingClientRect().left;
+        const offsetY = e.clientY - canvas.getBoundingClientRect().top;
+        posWhenPointerdown = { x: offsetX, y: offsetY }
+
+        transWhenPointerDown = ctx.getTransform();
+      })
+
+      // cursor pos
+      canvas.addEventListener('pointermove', e => {
+        // if(pointerIsDown) return;
+        updateCursor(e);
+      })
+
+      // drag event
+      canvas.addEventListener('pointermove', e => {
+        dragCanvasByPointerEvent(e);
+      });
+
+
       canvas.addEventListener('pointerup', e => {
         cancelMoving();
       });
+
       canvas.addEventListener('pointercancel', e => {
         cancelMoving();
       });
@@ -332,7 +364,8 @@
       });
 
       canvas.addEventListener('wheel', e => {
-        // dragCanvas(e);
+        dragCanvasByWheelEvent(e);
+        updateCursor(e);
         e.stopPropagation();
         e.preventDefault();
       });
@@ -341,10 +374,10 @@
 
     function initDraw() {
       ctx.save();
-      ctx.translate(-50, 50);
       ctx.scale(2, 2);
-      ctxMouse.translate(-50, 50);
-      ctxMouse.scale(2, 2);
+      ctx.translate(viewportPos.x, viewportPos.y);
+      const m = ctx.getTransform();
+      ctxMouse.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
       drawAll();
     }
     genColorMap();
