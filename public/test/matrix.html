@@ -7,7 +7,7 @@
   <title>Document</title>
   <style>
     body {
-      margin:0;
+      margin: 0;
     }
   </style>
 </head>
@@ -17,30 +17,50 @@
   <canvas id="myCanvasMouse" width="800" height="800"
     style="position: absolute; top: 0; left:0; z-index: 10;pointer-events: none;"></canvas>
   <script type="module">
-    import { DOMMatrix } from '../matrix/domMatrix.mjs';
+    import { DOMMatrix as DOMMatrix3rd } from '../matrix/domMatrix.mjs';
+    const dpr = window.devicePixelRatio;
 
     const canvas = document.getElementById('myCanvas');
     const ctx = canvas.getContext('2d');
     const myCanvasMouse = document.getElementById('myCanvasMouse');
     const ctxMouse = myCanvasMouse.getContext('2d');
-    const dpr = window.devicePixelRatio;
     // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const ctxTrans = ctx.getTransform();
 
 
     // 设置 canvas 大小
     canvas.width = 800;
     canvas.height = 800;
 
+    const numBlocksX = 8;
+    const numBlocksY = 8;
+    const colorMap = {}
+
     function toFixed2(number) {
       return Math.round(number * 100) / 100;
     }
 
+    function genColorMap() {
+      for (let x = 0; x < numBlocksX; x++) {
+        colorMap[x] = {}
+        for (let y = 0; y < numBlocksY; y++) {
+
+          // 生成一个随机的冷色色值
+          const hue = Math.floor(Math.random() * 180); // 0-180 是冷色范围
+          const saturation = 50 + Math.floor(Math.random() * 50); // 50-100 饱和度
+          const lightness = 50 + Math.floor(Math.random() * 50); // 50-100 亮度
+          const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+          colorMap[x][y] = color;
+        }
+      }
+    }
+
     function drawTiles(ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       // 定义色块的尺寸
       const blockSize = 100;
-      const numBlocksX = 8;
-      const numBlocksY = 8;
+
 
       // 遍历绘制每个色块
       for (let x = 0; x < numBlocksX; x++) {
@@ -49,14 +69,11 @@
           const left = x * blockSize;
           const top = y * blockSize;
 
-          // 生成一个随机的冷色色值
-          const hue = Math.floor(Math.random() * 180); // 0-180 是冷色范围
-          const saturation = 50 + Math.floor(Math.random() * 50); // 50-100 饱和度
-          const lightness = 50 + Math.floor(Math.random() * 50); // 50-100 亮度
-          const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+
 
           // 绘制当前色块
-          ctx.fillStyle = color;
+          ctx.fillStyle = colorMap[x][y];
+          ctx.fillRect(left, top, blockSize, blockSize);
           ctx.fillRect(left, top, blockSize, blockSize);
         }
       }
@@ -102,6 +119,15 @@
       }
     }
 
+    function drawAll() {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      drawTiles(ctx);
+      drawRuler(ctx)
+    }
+    
     // test1, use inverse matrix go back to origin transform
     function inverseDemo() {
       console.log('before', ctx.getTransform());
@@ -116,7 +142,7 @@
         toFixed2(inverse.e),
         toFixed2(inverse.f));
       console.log('after', ctx.getTransform());
-      drawTiles();
+      drawTiles(ctx);
     }
 
     // 坐标系变换
@@ -141,6 +167,7 @@
         ctxMouse.clearRect(0, 0, canvas.width, canvas.height);
         ctxMouse.fillStyle = 'red';
         ctxMouse.fillRect(pos.x - 5, pos.y - 5, 10, 10);
+        ctxMouse.fillText(`${Math.round(pos.x)}, ${Math.round(pos.y)}`, pos.x, pos.y - 10)
       })
 
     }
@@ -169,9 +196,106 @@
         ctxMouse.fillText(`${Math.round(pos.x)}, ${Math.round(pos.y)}`, pos.x, pos.y - 10)
       })
     }
-    // transformCoord();
-    transformCoordWith3rdPartyMatrix();
 
+    function drawCursor(pos) {
+      window.pos = pos;
+
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctxMouse.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      const m = ctx.getTransform();
+      ctxMouse.setTransform(m);
+      ctxMouse.fillStyle = 'red';
+      ctxMouse.fillRect(pos.x - 5, pos.y - 5, 10, 10);
+      ctxMouse.fillText(`${Math.round(pos.x)}, ${Math.round(pos.y)}`, pos.x, pos.y - 10);      
+    }
+
+    function bindEvent() {
+      let originPos = { x: 0, y: 0 };
+      let pointerdownAndMoving = 0;
+      let lastPos = { x: 0, y: 0 };
+      let pointerIsDown = 0;
+      let delta = { x: 0, y: 0 };
+      
+      let posWhenPointerdown = { x: 0, y: 0 };
+      let transWhenPointerDown;
+      canvas.addEventListener('pointerdown', e => {
+        pointerIsDown = true;
+        const offsetX = e.clientX - canvas.getBoundingClientRect().left;
+        const offsetY = e.clientY - canvas.getBoundingClientRect().top;
+        posWhenPointerdown = { x: offsetX, y: offsetY }
+
+        transWhenPointerDown = ctx.getTransform();
+      })
+
+      // cursor pos
+      canvas.addEventListener('pointermove', e => {
+        if(pointerIsDown) return;
+        const x = e.clientX - canvas.getBoundingClientRect().left;
+        const y = e.clientY - canvas.getBoundingClientRect().top;
+        const trans = ctx.getTransform();
+        const inverse = trans.inverse();        
+        const pos = inverse.transformPoint({ x, y });
+        drawCursor(pos);
+      })
+
+      // drag event
+      canvas.addEventListener('pointermove', e => {
+        if(!pointerIsDown ) return;
+        pointerdownAndMoving = 1;
+
+        const offsetX = e.clientX - canvas.getBoundingClientRect().left;
+        const offsetY = e.clientY - canvas.getBoundingClientRect().top;
+
+        const curPos = { x: offsetX, y: offsetY };
+        delta = { x: curPos.x - lastPos.x, y: curPos.y - lastPos.y }
+
+        lastPos.x = curPos.x;
+        lastPos.y = curPos.y;
+
+        const deltaFromPointerdown = { x: curPos.x - posWhenPointerdown.x, y: curPos.y - posWhenPointerdown.y }
+        const m = DOMMatrix.fromMatrix(transWhenPointerDown);
+        m.e += deltaFromPointerdown.x/m.a;
+        m.f += deltaFromPointerdown.y/m.d;
+        // m.translate(delta.x, delta.y);
+        ctx.setTransform(m);
+        drawAll();
+      });
+      const cancelMoving = () => {
+        pointerIsDown = false;
+        pointerdownAndMoving = 0;
+      }
+      canvas.addEventListener('pointerup', e => {
+        cancelMoving();
+      });
+      canvas.addEventListener('pointercancel', e => {
+        cancelMoving();
+      });
+
+      canvas.addEventListener('pointerleave', e => {
+        cancelMoving();
+      });
+      canvas.addEventListener('pointerout', e => {
+        cancelMoving();
+      });
+    }
+
+
+    function initDraw() {
+      ctx.save();
+      ctx.translate(-50, 50);
+      ctx.scale(2, 2);
+      ctxMouse.translate(-50, 50);
+      ctxMouse.scale(2, 2);
+      drawAll();
+    }
+    genColorMap();
+    bindEvent();
+
+    initDraw()
+    // transformCoord();
+    // transformCoordWith3rdPartyMatrix();    
   </script>
 </body>
 

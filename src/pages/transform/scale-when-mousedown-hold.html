@@ -6,48 +6,6 @@
     <script>
         const canvas = document.getElementById('myCanvas');
         const ctx = canvas.getContext('2d');
-        // 缩放因子
-        function zoomFromRectCenter() {
-            const scale = 2;
-            // 矩形的左上角坐标和尺寸
-            const rectX = 200;
-            const rectY = 200;
-            const rectWidth = 100;
-            const rectHeight = 50;
-
-            // 计算矩形中心点坐标
-            const centerX = rectX + rectWidth / 2; // 100
-            const centerY = rectY + rectHeight / 2; // 75
-
-
-            // ctx.transform(a, b, c, d, e, f) 方法应用的变换顺序如下：
-
-            // 缩放(a 和 d): 首先，水平方向上缩放 a 倍，垂直方向上缩放 d 倍。缩放是围绕画布的原点（0, 0）进行的。
-            // 旋转(b 和 c): 接着，画布会根据 b 和 c 参数进行旋转。旋转同样是围绕原点（0, 0）进行的。
-            // 平移(e 和 f): 最后，画布会根据 e 和 f 参数进行平移。这个平移是相对于缩放和旋转之后的新原点进行的。
-
-
-
-            // 应用变换
-            // ctx.transform(1, 0, 0, 1, centerX, centerY);
-            // ctx.transform(2, 0, 0, 2, 0, 0);     
-            // 接下来从中心点回归到左上角开始绘制  
-            // ctx.transform(1, 0, 0, 1, -centerX, -centerY);
-
-            // 将上面三个变换合成为一个
-            // 因此这个矩阵就是按照坐标中心点缩放 2x 的矩阵, 以后都可以这么用
-            // 这里 -centerX 是因为  -centerX * zoom + centerX  恰好形成  -centerX
-            // 如果缩放倍数不是 2x 就会是别的值了
-            ctx.transform(2, 0, 0, 2, -centerX, -centerY);
-
-            // 绘制放大后的矩形
-            ctx.fillStyle = 'blue';
-            ctx.fillRect(rectX, rectY, rectWidth, rectHeight);
-
-            // 重置变换状态
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-        }
-
 
     </script>
 
@@ -154,8 +112,8 @@
             shrinkFrame();
         })
 
-        const zoomAndDraw = (zoom, x, y) => {
-            ctx.setTransform(zoom, 0, 0, zoom, -x * (zoom - 1), -y * (zoom - 1));
+        const zoomAndDraw = (zoom, zoomOriginX, zoomOriginY) => {
+            ctx.setTransform(zoom, 0, 0, zoom, -zoomOriginX * (zoom - 1), -zoomOriginY * (zoom - 1));
             draw();
         }
 
