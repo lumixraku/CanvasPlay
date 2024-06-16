@@ -14,6 +14,8 @@
 
 <body>
   <canvas id="myCanvas" width="800" height="800"></canvas>
+  <canvas id="myCanvasRuler" width="800" height="800"
+    style="position: absolute; top: 0; left:0; z-index: 10;pointer-events: none;"></canvas>
   <canvas id="myCanvasMouse" width="800" height="800"
     style="position: absolute; top: 0; left:0; z-index: 10;pointer-events: none;"></canvas>
   <script type="module">
@@ -24,6 +26,8 @@
     const ctx = canvas.getContext('2d');
     const myCanvasMouse = document.getElementById('myCanvasMouse');
     const ctxMouse = myCanvasMouse.getContext('2d');
+    const myCanvasRuler = document.getElementById('myCanvasRuler');
+    const ctxRuler = myCanvasRuler.getContext('2d');    
     // ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const ctxTrans = ctx.getTransform();
 
@@ -56,7 +60,11 @@
     }
 
     function drawTiles(ctx) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+      
       ctx.save();
       // 定义色块的尺寸
       const blockSize = 100;
@@ -80,52 +88,90 @@
       ctx.restore();
     }
 
-    function drawRuler(ctx) {
+    function drawRuler(ctxRuler) {
+      ctxRuler.save();
+      ctxRuler.setTransform(1, 0, 0, 1, 0, 0);
+      ctxRuler.clearRect(0, 0, canvas.width, canvas.height);
+      ctxRuler.restore();
+
       const canvasWidth = canvas.width;
       const canvasHeight = canvas.height;
       const step = 100;
       const smallTickLength = 10;
       const largeTickLength = 20;
       const textPosY = 30;
+      const textPosX = 30;
       const textHeight = 15;
 
-      // 绘制标尺
-      ctx.textAlign = 'center';
+
+      const m = ctx.getTransform();
+      // 绘制标尺 X 轴
+      ctxRuler.save();
+      ctxRuler.setTransform(m.a, m.b, m.c, m.d, m.e, 0);
+      ctxRuler.textAlign = 'center';
       for (let i = 0; i <= canvasWidth; i += step) {
         // 绘制长竖线
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, largeTickLength);
-        ctx.stroke();
+        ctxRuler.beginPath();
+        ctxRuler.moveTo(i, 0);
+        ctxRuler.lineTo(i, largeTickLength);
+        ctxRuler.stroke();
 
         // 绘制数字
         if (i % step === 0) {
-          ctx.font = '12px Arial';
-          ctx.fillText(i.toString(), i, textPosY);
+          ctxRuler.font = '12px Arial';
+          ctxRuler.fillText(i.toString(), i, textPosY);
         }
 
         // 绘制短竖线
         for (let j = 10; j < step; j += 10) {
-          ctx.beginPath();
-          ctx.moveTo(i + j, 0);
-          ctx.lineTo(i + j, smallTickLength);
-          ctx.stroke();
+          ctxRuler.beginPath();
+          ctxRuler.moveTo(i + j, 0);
+          ctxRuler.lineTo(i + j, smallTickLength);
+          ctxRuler.stroke();
 
           if (j == 50) {
-            ctx.font = '10px Arial';
-            ctx.fillText((i + 50).toString(), i + j, textPosY - 10);
+            ctxRuler.font = '10px Arial';
+            ctxRuler.fillText((i + 50).toString(), i + j, textPosY - 10);
           }
         }
       }
+      ctxRuler.restore();
+
+      // 绘制标尺 Y 轴
+      ctxRuler.save();
+      ctxRuler.setTransform(m.a, m.b, m.c, m.d, 0, m.f);
+      for (let i = 0; i <= canvasHeight; i += step) {
+        // 绘制长横线
+        ctxRuler.beginPath();
+        ctxRuler.moveTo(0, i);
+        ctxRuler.lineTo(largeTickLength, i);
+        ctxRuler.stroke();
+
+        // 绘制数字
+        if (i % step === 0) {
+          ctxRuler.font = '12px Arial';
+          ctxRuler.fillText(i.toString(), textPosX, i + 5);
+        }
+
+        // 绘制短横线
+        for (let j = 10; j < step; j += 10) {
+          ctxRuler.beginPath();
+          ctxRuler.moveTo(0, i + j);
+          ctxRuler.lineTo(smallTickLength, i + j);
+          ctxRuler.stroke();
+
+          if (j == 50) {
+            ctxRuler.font = '10px Arial';
+            ctxRuler.fillText((i + 50).toString(), textPosY - 10, i + j + 5);
+          }
+        }
+      }
+      ctxRuler.restore();
     }
 
     function drawAll() {
-      ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.restore();
       drawTiles(ctx);
-      drawRuler(ctx)
+      drawRuler(ctxRuler)
     }
     
     // test1, use inverse matrix go back to origin transform
@@ -200,10 +246,10 @@
     function drawCursor(pos) {
       window.pos = pos;
 
-      ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctxMouse.save();
+      ctxMouse.setTransform(1, 0, 0, 1, 0, 0);
       ctxMouse.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.restore();
+      ctxMouse.restore();
       const m = ctx.getTransform();
       ctxMouse.setTransform(m);
       ctxMouse.fillStyle = 'red';
@@ -231,7 +277,7 @@
 
       // cursor pos
       canvas.addEventListener('pointermove', e => {
-        if(pointerIsDown) return;
+        // if(pointerIsDown) return;
         const x = e.clientX - canvas.getBoundingClientRect().left;
         const y = e.clientY - canvas.getBoundingClientRect().top;
         const trans = ctx.getTransform();
@@ -240,10 +286,12 @@
         drawCursor(pos);
       })
 
-      // drag event
-      canvas.addEventListener('pointermove', e => {
-        if(!pointerIsDown ) return;
-        pointerdownAndMoving = 1;
+
+      const dragCanvas = (e) => {
+        if(e.type === 'pointermove') {
+          if (!pointerIsDown) return;
+          pointerdownAndMoving = 1;
+        }
 
         const offsetX = e.clientX - canvas.getBoundingClientRect().left;
         const offsetY = e.clientY - canvas.getBoundingClientRect().top;
@@ -256,11 +304,14 @@
 
         const deltaFromPointerdown = { x: curPos.x - posWhenPointerdown.x, y: curPos.y - posWhenPointerdown.y }
         const m = DOMMatrix.fromMatrix(transWhenPointerDown);
-        m.e += deltaFromPointerdown.x/m.a;
-        m.f += deltaFromPointerdown.y/m.d;
-        // m.translate(delta.x, delta.y);
+        m.e += deltaFromPointerdown.x;
+        m.f += deltaFromPointerdown.y;
         ctx.setTransform(m);
-        drawAll();
+        drawAll();        
+      }
+      // drag event
+      canvas.addEventListener('pointermove', e => {
+        dragCanvas(e);
       });
       const cancelMoving = () => {
         pointerIsDown = false;
@@ -278,6 +329,12 @@
       });
       canvas.addEventListener('pointerout', e => {
         cancelMoving();
+      });
+
+      canvas.addEventListener('wheel', e => {
+        // dragCanvas(e);
+        e.stopPropagation();
+        e.preventDefault();
       });
     }
 
