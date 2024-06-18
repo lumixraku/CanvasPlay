@@ -41,7 +41,7 @@
     const numBlocksY = 8;
     const colorMap = {}
 
-    const viewportPos = window.viewportPos = { x: -50, y: 50 } // 
+    const viewportPos = window.viewportPos = { x: 0, y: 0 } // 
 
     function toFixed2(number) {
       return Math.round(number * 100) / 100;
@@ -329,6 +329,43 @@
         pointerdownAndMoving = 0;
       }
 
+      const zoomEvent = (event) => {
+        let scale = 1;
+        if (event.ctrlKey) {
+          event.preventDefault();
+          scale += -event.deltaY * 0.01;
+
+          const rect = canvas.getBoundingClientRect();
+          const offsetX = event.clientX - rect.left;
+          const offsetY = event.clientY - rect.top;     
+          
+          const zoomOriginX = -100;
+          const zoomOriginY = -100;
+          console.log('delta', event.deltaY, scale, zoomOriginX, zoomOriginY);
+          const m = ctx.getTransform();
+
+          
+          m.translate(zoomOriginX, -zoomOriginY);
+          m.scaleSelf(scale, scale);
+          m.a = m.d = 3;
+          ctx.setTransform(m);
+          drawAll();
+
+        }
+      }
+
+      const zoom = () => {
+        const zoomOriginX = 200;
+        const zoomOriginY = 200;
+        const m = ctx.getTransform();
+
+        let scale = 2;
+        m.translateSelf(-zoomOriginX * (scale -1), -zoomOriginY * (scale -1));
+        m.a = m.d = scale;
+        ctx.setTransform(m);
+        drawAll();
+      }
+
       canvas.addEventListener('pointerdown', e => {
         pointerIsDown = true;
         const offsetX = e.clientX - canvas.getBoundingClientRect().left;
@@ -368,24 +405,31 @@
       canvas.addEventListener('wheel', e => {
         dragCanvasByWheelEvent(e);
         updateCursor(e);
+        zoom(e);
         e.stopPropagation();
         e.preventDefault();
+
+        
       });
+
+      zoom();
+
     }
+
 
 
     function initDraw() {
       ctx.save();
-      ctx.scale(2, 2);
+      // ctx.scale(2, 2);
       ctx.translate(viewportPos.x, viewportPos.y);
       const m = ctx.getTransform();
       ctxMouse.setTransform(m.a, m.b, m.c, m.d, m.e, m.f);
       drawAll();
     }
     genColorMap();
+    initDraw();
     bindEvent();
 
-    initDraw()
     // transformCoord();
     // transformCoordWith3rdPartyMatrix();    
   </script>
