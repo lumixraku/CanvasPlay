@@ -270,13 +270,15 @@
       let posWhenPointerdown = { x: 0, y: 0 };
       let transWhenPointerDown;
 
-
+      let cursorPos = {x: 0, y: 0};
       const updateCursor = (e) => {
         const x = e.clientX - canvas.getBoundingClientRect().left;
         const y = e.clientY - canvas.getBoundingClientRect().top;
         const trans = ctx.getTransform();
         const inverse = trans.inverse();
         const pos = inverse.transformPoint({ x, y });
+        cursorPos.x = pos.x;
+        cursorPos.y = pos.y;
         drawCursor(pos);
       }
 
@@ -329,42 +331,53 @@
         pointerdownAndMoving = 0;
       }
 
-      const zoomEvent = (event) => {
-        let scale = 1;
+      const zoomHandler = (event) => {
         if (event.ctrlKey) {
           event.preventDefault();
+          const trans = ctx.getTransform();
+
+          let scale = trans.a;
           scale += -event.deltaY * 0.01;
 
           const rect = canvas.getBoundingClientRect();
           const offsetX = event.clientX - rect.left;
           const offsetY = event.clientY - rect.top;     
           
-          const zoomOriginX = -100;
-          const zoomOriginY = -100;
-          console.log('delta', event.deltaY, scale, zoomOriginX, zoomOriginY);
-          const m = ctx.getTransform();
+          const p = trans.inverse().transformPoint({ x: offsetX, y: offsetY });
+          console.log('p', p.x, p.y)
+          const zoomOriginX = p.x;
+          const zoomOriginY = p.y;
 
-          
-          m.translate(zoomOriginX, -zoomOriginY);
+          const m = new DOMMatrix();
+          m.translateSelf(-zoomOriginX * scale , -zoomOriginY * scale);
+          m.translateSelf(offsetX, offsetY);
           m.scaleSelf(scale, scale);
-          m.a = m.d = 3;
           ctx.setTransform(m);
           drawAll();
 
         }
       }
 
-      const zoom = () => {
+      const zoom = (p) => {
+        // ctx.translate(-100, -100);
         const zoomOriginX = 200;
         const zoomOriginY = 200;
-        const m = ctx.getTransform();
-
-        let scale = 2;
-        m.translateSelf(-zoomOriginX * (scale -1), -zoomOriginY * (scale -1));
-        m.a = m.d = scale;
+        const m = new DOMMatrix();
+        
+        let scale = p || 2;
+        m.translateSelf(-100, -100);
+        m.translateSelf(-zoomOriginX * (scale - 1), -zoomOriginY * (scale - 1));
+        // m.translateSelf(-zoomOriginX * (scale - 1), -zoomOriginY * (scale - 1));
+        m.scaleSelf(scale, scale);
         ctx.setTransform(m);
         drawAll();
+        
+        // setTimeout(()=> {
+        //   zoom(scale + 0.1)
+        // }, 1000)
       }
+
+      // zoom(2);
 
       canvas.addEventListener('pointerdown', e => {
         pointerIsDown = true;
@@ -405,14 +418,14 @@
       canvas.addEventListener('wheel', e => {
         dragCanvasByWheelEvent(e);
         updateCursor(e);
-        zoom(e);
+        zoomHandler(e);
         e.stopPropagation();
         e.preventDefault();
 
         
       });
 
-      zoom();
+      // zoom(2);
 
     }
 
